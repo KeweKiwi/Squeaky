@@ -23,7 +23,10 @@ struct AddTransactionFromShortcutIntent: AppIntent {
     @Parameter(title: "Type")
     var type: ShortcutTransactionType
 
-    @Parameter(title: "Category")
+    @Parameter(
+        title: "Category",
+        optionsProvider: ShortcutCategoryOptionsProvider()
+    )
     var category: ShortcutCategoryOption
 
     @Parameter(title: "Date")
@@ -45,7 +48,7 @@ struct AddTransactionFromShortcutIntent: AppIntent {
         let existingCategories = try context.fetch(descriptor)
 
         let finalCategory = existingCategories.first {
-            $0.name.lowercased() == categoryName.lowercased()
+            $0.name.lowercased() == categoryName.lowercased() && $0.type == categoryType
         } ?? {
             let newCategory = Category(
                 id: UUID(),
