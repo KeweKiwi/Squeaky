@@ -42,6 +42,7 @@ struct SavingGoalsView: View {
             // toolbar
             .toolbar {
                 
+                // LEFT (Back)
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
                         // isi kalau ada navigation sebelumnya
@@ -91,7 +92,7 @@ struct SavingGoalsView: View {
                             .foregroundColor(.black)
                     }
                 }
-                .padding(.top, 40)
+                .padding(.top, 10)
                 
                 Spacer()
             }

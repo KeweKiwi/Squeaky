@@ -36,17 +36,17 @@ struct EnterGoalView: View {
                     // Close Button Area
                     HStack {
                         Spacer()
+                        
                         Button(action: { dismiss() }) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.black)
-                                .padding(12)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                         }
-                        .padding(.trailing, 24)
+                        .buttonStyle(.glass(.regular))
+                        .controlSize(.regular)
+                        .buttonBorderShape(.circle)
                     }
+                    .padding(.trailing, 24)
+
                 }
                 
                 // MARK: - Header Title
