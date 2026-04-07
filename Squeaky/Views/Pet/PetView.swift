@@ -1,38 +1,58 @@
-//
-//  PetView.swift
-//  Squeaky
-//
-//  Created by Christianto Elvern Haryanto on 06/04/26.
-//
-
 import SwiftUI
 
 struct PetView: View {
     var body: some View {
-        VStack(){
-            HStack(){
+        ZStack {
+            // Background circle
+            Circle()
+                .fill(Color(red: 248/255, green: 206/255, blue: 23/255))
+                .opacity(0.3)
+                .frame(width: 590, height: 590)
+                .offset(y: -350)
+                .zIndex(0)
+
+            // Content
+            VStack(alignment: .center, spacing: 16) {
                 
-            }
-            HStack(){
-                VStack(spacing: -2){
-                    Text("Grow your Squeaky!").font(.system(size: 28)).fontWeight(.semibold)
-                    Text("Complete Challenges to gain xp").font(.system(size: 12)).fontWeight(.medium)
+                HStack {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 36, height: 36)
+
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+
+                    Spacer()
                 }
-            }
-            
-            
-            HStack(){
-                VStack(){
-                    Text("Small Challenges").font(.system(size: 16)).fontWeight(.semibold)
-                    ForEach(1...2, id: \.self) { i in
-                        ChallengeCardView()
+
+                // Title
+                VStack(alignment: .center, spacing: -2) {
+                    Text("Grow your Squeaky!")
+                        .font(.system(size: 28, weight: .semibold))
+
+                    Text("Complete Challenges to gain xp")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.black)
+                }
+
+                // Section
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Small Challenges")
+                        .font(.system(size: 16, weight: .semibold))
+
+                    ForEach(1...2, id: \.self) { _ in
+                        ChallengeCardView(isCompleted: false)
                     }
                 }
-                
+
+                Spacer()
             }
-            
-        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(20)
+            .zIndex(1)
+        }
     }
 }
 

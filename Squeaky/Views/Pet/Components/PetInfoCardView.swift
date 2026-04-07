@@ -11,8 +11,8 @@ struct PetInfoCardView: View {
     var body: some View {
         HStack(){
             VStack(alignment: .leading){
-                Text("Rat Level")
-                    .font(.system(size: 12)).fontWeight(.semibold)
+                    Text("Rat Level")
+                        .font(.system(size: 12)).fontWeight(.semibold)
             }
             
         }.padding(.horizontal, 20)
