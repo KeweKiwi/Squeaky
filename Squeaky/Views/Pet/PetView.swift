@@ -2,57 +2,52 @@ import SwiftUI
 
 struct PetView: View {
     var body: some View {
-        ZStack {
-            // Background circle
+        ZStack(alignment: .top) {
+            // Fixed background
             Circle()
                 .fill(Color(red: 248/255, green: 206/255, blue: 23/255))
-                .opacity(0.3)
                 .frame(width: 590, height: 590)
                 .offset(y: -350)
-                .zIndex(0)
+                .opacity(0.3)
+                .ignoresSafeArea()
 
-            // Content
-            VStack(alignment: .center, spacing: 16) {
-                
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 36, height: 36)
+            // Scrollable content
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .center, spacing: 16) {
 
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
+                    VStack(alignment: .center, spacing: 4) {
+                        Text("Grow your Squeaky!")
+                            .font(.system(size: 28, weight: .semibold))
+
+                        Text("Complete Challenges to gain xp")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.black)
+
+                        VStack(spacing: 0) {
+                            GaugeArcView(value: 0.5)
+                                .frame(width: 300, height: 220)
+
+                            RatWithLevelCardView(level: 8, currentXP: 25, maxXP: 100)
+                                .frame(width: 400)
+                                .padding(.top, -90)
+                        }
+                        .frame(maxWidth: 300)
                     }
 
-                    Spacer()
-                }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Small Challenges")
+                            .font(.system(size: 16, weight: .semibold))
 
-                // Title
-                VStack(alignment: .center, spacing: -2) {
-                    Text("Grow your Squeaky!")
-                        .font(.system(size: 28, weight: .semibold))
-
-                    Text("Complete Challenges to gain xp")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.black)
-                }
-
-                // Section
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Small Challenges")
-                        .font(.system(size: 16, weight: .semibold))
-
-                    ForEach(1...2, id: \.self) { _ in
-                        ChallengeCardView(isCompleted: false)
+                        ForEach(1...4, id: \.self) { _ in
+                            ChallengeCardView(isCompleted: false)
+                        }
                     }
                 }
-
-                Spacer()
+                .padding(20)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(20)
-            .zIndex(1)
+
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }
 

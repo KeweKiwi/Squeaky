@@ -7,12 +7,22 @@
 
 import SwiftUI
 
-struct RatCardView: View {
+struct CortisolCardView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .center){
+            HStack(){
+                VStack(spacing: -2){
+                    Text("Cortisol Level").font(.system(size: 12))
+                        .fontWeight(.semibold)
+                    
+                    Text("Normal").font(.system(size: 16))
+                        .fontWeight(.semibold)
+                }
+            }
+        }
     }
 }
 
 #Preview {
-    RatCardView()
+    CortisolCardView()
 }
