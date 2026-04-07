@@ -12,22 +12,21 @@ struct AddTransactionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    let draft: ShortcutTransactionDraft
+    @Query(sort: \Category.name) private var categories: [Category]
 
-    @State private var title: String
-    @State private var amount: Double
-    @State private var selectedType: String
-    @State private var selectedCategory: String
-    @State private var date: Date
+    @State private var title: String = ""
+    @State private var amount: Double = 0
+    @State private var selectedType: TransactionType = .expense
+    @State private var selectedCategoryName: String = ""
+    @State private var date: Date = .now
     @State private var note: String = ""
 
-    init(draft: ShortcutTransactionDraft) {
-        self.draft = draft
-        _title = State(initialValue: draft.title)
-        _amount = State(initialValue: draft.amount)
-        _selectedType = State(initialValue: draft.type)
-        _selectedCategory = State(initialValue: draft.category)
-        _date = State(initialValue: draft.date)
+    private var filteredCategories: [Category] {
+        categories.filter { $0.type == categoryTypeForSelection || $0.name == "Other" }
+    }
+
+    private var categoryTypeForSelection: CategoryType {
+        selectedType == .income ? .income : .expense
     }
 
     var body: some View {
@@ -36,26 +35,22 @@ struct AddTransactionView: View {
                 TextField("Title", text: $title)
 
                 TextField("Amount", value: $amount, format: .number)
+                    .keyboardType(.decimalPad)
 
                 Picker("Type", selection: $selectedType) {
-                    Text("Income").tag("income")
-                    Text("Expense").tag("expense")
+                    Text("Income").tag(TransactionType.income)
+                    Text("Expense").tag(TransactionType.expense)
+                }
+                .onChange(of: selectedType) { _, _ in
+                    selectedCategoryName = ""
                 }
 
-                Picker("Category", selection: $selectedCategory) {
-                    Text("Food").tag("food")
-                    Text("Clothing").tag("clothing")
-                    Text("Transport").tag("transport")
-                    Text("Beauty").tag("beauty")
-                    Text("Entertainment").tag("entertainment")
-                    Text("Gift").tag("gift")
-                    Text("Medical").tag("medical")
-                    Text("Debt").tag("debt")
-                    Text("Daily").tag("daily")
-                    Text("Salary").tag("salary")
-                    Text("Allowance").tag("allowance")
-                    Text("Bonus").tag("bonus")
-                    Text("Other").tag("other")
+                Picker("Category", selection: $selectedCategoryName) {
+                    Text("Select Category").tag("")
+
+                    ForEach(filteredCategories, id: \.id) { category in
+                        Text(category.name).tag(category.name)
+                    }
                 }
 
                 DatePicker("Date", selection: $date, displayedComponents: .date)
@@ -74,38 +69,30 @@ struct AddTransactionView: View {
                     Button("Save") {
                         saveTransaction()
                     }
+                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty || amount <= 0 || selectedCategoryName.isEmpty)
+                }
+            }
+            .onAppear {
+                if selectedCategoryName.isEmpty, let first = filteredCategories.first {
+                    selectedCategoryName = first.name
                 }
             }
         }
     }
 
     private func saveTransaction() {
-        let transactionType: TransactionType = selectedType == "income" ? .income : .expense
-        let categoryType: CategoryType = selectedType == "income" ? .income : .expense
-
-        let fetch = FetchDescriptor<Category>()
-        let existingCategories = (try? modelContext.fetch(fetch)) ?? []
-
-        let category = existingCategories.first {
-            $0.name.lowercased() == selectedCategory.lowercased()
-        } ?? {
-            let newCategory = Category(
-                id: UUID(),
-                name: selectedCategory.capitalized,
-                type: categoryType
-            )
-            modelContext.insert(newCategory)
-            return newCategory
-        }()
+        let selectedCategory = categories.first {
+            $0.name == selectedCategoryName && $0.type == categoryTypeForSelection
+        }
 
         let transaction = Transaction(
             id: UUID(),
             title: title,
             amount: Decimal(amount),
-            type: transactionType,
+            type: selectedType,
             date: date,
-            note: note.isEmpty ? nil : note,
-            category: category
+            note: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note,
+            category: selectedCategory
         )
 
         modelContext.insert(transaction)
