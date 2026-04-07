@@ -65,8 +65,6 @@ struct ContentView: View {
         }
         .task {
             SeedData.seedCategoriesIfNeeded(context: modelContext)
-            BudgetSeedData.seedBudgetIfNeeded(context: modelContext)
-            TransactionSeedData.seedTransactionsIfNeeded(context: modelContext)
         }
     }
 
