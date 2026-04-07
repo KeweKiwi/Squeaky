@@ -1,3 +1,10 @@
+//
+//  ShortcutEnums.swift
+//  Squeaky
+//
+//  Created by Kevin William Faith on 05/04/26.
+//
+
 import AppIntents
 
 enum ShortcutTransactionType: String, AppEnum, CaseIterable {
@@ -22,12 +29,9 @@ enum ShortcutCategoryOption: String, AppEnum, CaseIterable {
     case medical
     case debt
     case daily
-
     case salary
     case allowance
     case bonus
-    case freelance
-
     case other
 
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Category")
@@ -45,7 +49,6 @@ enum ShortcutCategoryOption: String, AppEnum, CaseIterable {
         .salary: "Salary",
         .allowance: "Allowance",
         .bonus: "Bonus",
-        .freelance: "Freelance",
         .other: "Other"
     ]
 }
