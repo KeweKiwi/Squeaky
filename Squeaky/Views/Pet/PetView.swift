@@ -9,7 +9,30 @@ import SwiftUI
 
 struct PetView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(){
+            HStack(){
+                
+            }
+            HStack(){
+                VStack(spacing: -2){
+                    Text("Grow your Squeaky!").font(.system(size: 28)).fontWeight(.semibold)
+                    Text("Complete Challenges to gain xp").font(.system(size: 12)).fontWeight(.medium)
+                }
+            }
+            
+            
+            HStack(){
+                VStack(){
+                    Text("Small Challenges").font(.system(size: 16)).fontWeight(.semibold)
+                    ForEach(1...2, id: \.self) { i in
+                        ChallengeCardView()
+                    }
+                }
+                
+            }
+            
+        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(20)
     }
 }
 
