@@ -1,108 +1,93 @@
-//
-//  TransactionList.swift
-//  Squeaky
-//
-//  Created by Gabriel Michelle Wibisono on 06/04/26.
-//
-
 import SwiftUI
+import SwiftData
 
-// MARK: - 1. Models
-struct TransactionItem: Identifiable, Equatable {
-    let id = UUID()
-    let name: String
-    let amount: Int
-    let icon: String
-    let iconColor: Color
+enum TransactionFilter: String, CaseIterable {
+    case all = "All"
+    case income = "Income"
+    case expense = "Expense"
 }
 
-struct DailyExpense: Identifiable {
-    let id = UUID()
-    let date: String
-    var items: [TransactionItem]
-    var isExpanded: Bool = true
-    
-    var total: Int {
-        items.reduce(0) { $0 + $1.amount }
-    }
-}
-
-// MARK: - 2. Colors & Helpers
-extension Color {
-    static let themeYellow = Color(red: 1.0, green: 0.98, blue: 0.88)
-    static let themePurple = Color(red: 0.92, green: 0.85, blue: 0.98)
-    static let themeGray = Color(red: 0.95, green: 0.95, blue: 0.95)
-}
-
-extension Int {
-    var formatIDR: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "Rp"
-        formatter.groupingSeparator = ","
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: self)) ?? "Rp0"
-    }
-}
-
-// MARK: - 3. Main Feature View
 struct TransactionListFlow: View {
-    // UI State
-    @State private var isSelectionMode = false // Controls Screen 1 vs Screen 2/3
-    @State private var selectedItems = Set<UUID>() // Tracks Screen 3 selections
-    @State private var showDeleteAlert = false // Controls Screen 4
-    @State private var selectedSegment = "Expense"
-    
-    // Data (Screen 5 will modify this)
-    @State private var dailyExpenses = [
-        DailyExpense(date: "Wednesday, 1", items: [
-            TransactionItem(name: "Teh Gopek", amount: 5000, icon: "🧃", iconColor: .green),
-            TransactionItem(name: "Mie ayam", amount: 25000, icon: "🍔", iconColor: .orange),
-            TransactionItem(name: "Nasi goreng", amount: 10000, icon: "🍔", iconColor: .orange)
-        ]),
-        DailyExpense(date: "Friday, 3", items: [
-            TransactionItem(name: "Teh Gopek", amount: 5000, icon: "🧃", iconColor: .green),
-            TransactionItem(name: "Mie ayam", amount: 25000, icon: "🍔", iconColor: .orange),
-            TransactionItem(name: "Uniqlow", amount: 80000, icon: "👚", iconColor: .purple)
-        ])
-    ]
+    @Environment(\.modelContext) private var modelContext
+
+    @Query(sort: \Transaction.date, order: .reverse)
+    private var transactions: [Transaction]
+
+    @State private var isSelectionMode = false
+    @State private var selectedItems = Set<UUID>()
+    @State private var showDeleteAlert = false
+    @State private var selectedSegment: TransactionFilter = .all
+    @State private var expandedSections = Set<String>()
+
+    private var filteredTransactions: [Transaction] {
+        switch selectedSegment {
+        case .all:
+            return transactions
+        case .income:
+            return transactions.filter { $0.type == .income }
+        case .expense:
+            return transactions.filter { $0.type == .expense }
+        }
+    }
+
+    private var groupedTransactions: [(dateKey: String, items: [Transaction])] {
+        let grouped = Dictionary(grouping: filteredTransactions) { transaction in
+            formattedSectionDate(transaction.date)
+        }
+
+        return grouped
+            .map { (dateKey: $0.key, items: $0.value.sorted { $0.date > $1.date }) }
+            .sorted {
+                guard
+                    let firstDate = $0.items.first?.date,
+                    let secondDate = $1.items.first?.date
+                else { return false }
+
+                return firstDate > secondDate
+            }
+    }
 
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
+            VStack(spacing: -20) {
                 headerSection
-                
+
                 ScrollView {
-                    VStack(spacing: 20) {
-                        ForEach($dailyExpenses) { $group in
-                            dailyGroupView(group: $group)
+                    VStack(spacing: 10) {
+                        if groupedTransactions.isEmpty {
+                            ContentUnavailableView(
+                                "No Transactions",
+                                systemImage: "tray",
+                                description: Text(emptyStateText)
+                            )
+                            .padding(.top, 40)
+                        } else {
+                            ForEach(groupedTransactions, id: \.dateKey) { group in
+                                dailyGroupView(group: group)
+                            }
                         }
                     }
-                    .padding(.top, 20)
                 }
-                .background(Color.white)
-                
-                customTabBar
             }
-            
-            // Screen 2/3: Trash Icon (Floating)
+
             if isSelectionMode {
                 trashIconButton
             }
-            
-            // Screen 4: Custom Delete Alert
+
             if showDeleteAlert {
                 deleteAlertOverlay
             }
         }
         .edgesIgnoringSafeArea(.bottom)
+        .task {
+            SeedData.seedCategoriesIfNeeded(context: modelContext)
+            BudgetSeedData.seedBudgetIfNeeded(context: modelContext)
+            TransactionSeedData.seedTransactionsIfNeeded(context: modelContext)
+        }
     }
 
-    // MARK: - Subviews
-    
     private var headerSection: some View {
         VStack(spacing: 15) {
-            // Screen 1: Top Bar
             HStack {
                 Spacer()
                 Button(isSelectionMode ? "Cancel" : "Select") {
@@ -118,57 +103,55 @@ struct TransactionListFlow: View {
                 .cornerRadius(10)
             }
             .padding(.horizontal)
-            
-            // Month Picker
+
             HStack(spacing: 20) {
                 Image(systemName: "chevron.left")
-                Text("April 2026")
+                Text(monthYearTitle)
                     .font(.title3)
                     .fontWeight(.bold)
                 Image(systemName: "chevron.right")
             }
-            
-            // Segmented Control
-            HStack(spacing: 0) {
-                ForEach(["Expense", "Income"], id: \.self) { tab in
-                    Text(tab)
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(selectedSegment == tab ? Color.black : Color.clear)
-                        .foregroundColor(selectedSegment == tab ? .white : .gray)
-                        .cornerRadius(8)
-                        .onTapGesture { selectedSegment = tab }
+
+            Picker("Filter", selection: $selectedSegment) {
+                ForEach(TransactionFilter.allCases, id: \.self) { filter in
+                    Text(filter.rawValue).tag(filter)
                 }
             }
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
-            .padding(.horizontal, 40)
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 24)
+            .onChange(of: selectedSegment) { _, _ in
+                selectedItems.removeAll()
+            }
         }
         .padding(.top, 50)
         .padding(.bottom, 25)
         .background(Color.themeYellow)
         .clipShape(RoundedCorner(radius: 40, corners: [.bottomLeft, .bottomRight]))
+        .ignoresSafeArea(edges: .top)
     }
 
-    private func dailyGroupView(group: Binding<DailyExpense>) -> some View {
-        VStack(spacing: 0) {
-            // Day Header
+    private func dailyGroupView(group: (dateKey: String, items: [Transaction])) -> some View {
+        let isExpanded = expandedSections.isEmpty || expandedSections.contains(group.dateKey)
+
+        return VStack(spacing: 0) {
             HStack {
-                Text(group.wrappedValue.date)
+                Text(group.dateKey)
                     .fontWeight(.medium)
+
                 Spacer()
-                Image(systemName: group.wrappedValue.isExpanded ? "chevron.up" : "chevron.down")
+
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
             }
             .padding()
             .background(Color.themePurple)
-            .onTapGesture { group.wrappedValue.isExpanded.toggle() }
-            
-            if group.wrappedValue.isExpanded {
+            .onTapGesture {
+                toggleSection(group.dateKey)
+            }
+
+            if isExpanded {
                 VStack(spacing: 0) {
-                    ForEach(group.wrappedValue.items) { item in
+                    ForEach(group.items, id: \.id) { item in
                         HStack {
-                            // Screen 2/3 Checkbox
                             if isSelectionMode {
                                 Image(systemName: selectedItems.contains(item.id) ? "checkmark.square.fill" : "square")
                                     .foregroundColor(selectedItems.contains(item.id) ? .black : .gray)
@@ -180,35 +163,37 @@ struct TransactionListFlow: View {
                                         }
                                     }
                             }
-                            
-                            // Item Content
+
                             ZStack {
-                                Circle().fill(item.iconColor.opacity(0.2)).frame(width: 35, height: 35)
-                                Text(item.icon)
+                                Circle()
+                                    .fill(categoryColor(for: item).opacity(0.2))
+                                    .frame(width: 35, height: 35)
+                                Text(categoryEmoji(for: item))
                             }
-                            
-                            Text(item.name)
-                                .font(.body)
-                            
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(item.title)
+                                    .font(.body)
+
+                                if let note = item.note, !note.isEmpty {
+                                    Text(note)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+
                             Spacer()
-                            
-                            Text(item.amount.formatIDR)
+
+                            Text(currency(item.amount))
                                 .fontWeight(.semibold)
                         }
                         .padding()
-                        
+
                         Divider().padding(.leading, isSelectionMode ? 50 : 20)
                     }
-                    
-                    // Group Total
-                    HStack {
-                        Spacer()
-                        Text("Total")
-                            .foregroundColor(.gray)
-                        Text(group.wrappedValue.total.formatIDR)
-                            .fontWeight(.bold)
-                    }
-                    .padding()
+
+                    groupFooter(for: group.items)
+                        .padding()
                 }
             }
         }
@@ -216,6 +201,54 @@ struct TransactionListFlow: View {
         .cornerRadius(15)
         .shadow(color: .black.opacity(0.05), radius: 5)
         .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private func groupFooter(for items: [Transaction]) -> some View {
+        switch selectedSegment {
+        case .all:
+            HStack {
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text("Total Income")
+                            .foregroundColor(.gray)
+                        Text(currency(totalIncome(for: items)))
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                    }
+
+                    HStack(spacing: 8) {
+                        Text("Total Expense")
+                            .foregroundColor(.gray)
+                        Text(currency(totalExpense(for: items)))
+                            .fontWeight(.bold)
+                            .foregroundColor(.red)
+                    }
+                }
+            }
+
+        case .income:
+            HStack {
+                Spacer()
+                Text("Total Income")
+                    .foregroundColor(.gray)
+                Text(currency(totalIncome(for: items)))
+                    .fontWeight(.bold)
+                    .foregroundColor(.green)
+            }
+
+        case .expense:
+            HStack {
+                Spacer()
+                Text("Total Expense")
+                    .foregroundColor(.gray)
+                Text(currency(totalExpense(for: items)))
+                    .fontWeight(.bold)
+                    .foregroundColor(.red)
+            }
+        }
     }
 
     private var trashIconButton: some View {
@@ -240,26 +273,28 @@ struct TransactionListFlow: View {
 
     private var deleteAlertOverlay: some View {
         ZStack {
-            Color.black.opacity(0.3).edgesIgnoringSafeArea(.all)
-            
+            Color.black.opacity(0.3)
+                .edgesIgnoringSafeArea(.all)
+
             VStack(spacing: 20) {
                 Text("Are you sure you want to delete?")
                     .font(.headline)
                     .multilineTextAlignment(.center)
-                
+
                 HStack(spacing: 15) {
                     Button("No") {
                         showDeleteAlert = false
                         isSelectionMode = false
+                        selectedItems.removeAll()
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(15)
                     .foregroundColor(.black)
-                    
+
                     Button("Yes") {
-                        deleteAction() // Navigates to Screen 5
+                        deleteAction()
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -275,51 +310,109 @@ struct TransactionListFlow: View {
         }
     }
 
-    private var customTabBar: some View {
-        HStack {
-            VStack { Image(systemName: "house"); Text("Overview").font(.caption2) }.frame(maxWidth: .infinity)
-            VStack { Image(systemName: "plus.app"); Text("Add").font(.caption2) }.frame(maxWidth: .infinity)
-            VStack {
-                HStack {
-                    Image(systemName: "list.bullet.rectangle")
-                    Text("Transaction").font(.caption2).fontWeight(.bold)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
-                .cornerRadius(20)
-            }.frame(maxWidth: .infinity)
+    private var emptyStateText: String {
+        switch selectedSegment {
+        case .all:
+            return "No transactions yet."
+        case .income:
+            return "No income transactions yet."
+        case .expense:
+            return "No expense transactions yet."
         }
-        .padding(.top, 10)
-        .padding(.bottom, 30)
-        .background(Color.themeGray)
     }
 
-    // MARK: - 4. Logic (Screen 5 Transition)
-    private func deleteAction() {
-        // Filter the data: remove items that were selected
-        for i in 0..<dailyExpenses.count {
-            dailyExpenses[i].items.removeAll { selectedItems.contains($0.id) }
+    private var monthYearTitle: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: .now)
+    }
+
+    private func formattedSectionDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, d"
+        return formatter.string(from: date)
+    }
+
+    private func totalIncome(for items: [Transaction]) -> Decimal {
+        items
+            .filter { $0.type == .income }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    private func totalExpense(for items: [Transaction]) -> Decimal {
+        items
+            .filter { $0.type == .expense }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    private func currency(_ value: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.maximumFractionDigits = 0
+        return formatter.string(from: NSDecimalNumber(decimal: value)) ?? "Rp0"
+    }
+
+    private func categoryEmoji(for transaction: Transaction) -> String {
+        switch transaction.category?.name.lowercased() {
+        case "food": return "🍔"
+        case "clothing": return "👚"
+        case "transport": return "🚗"
+        case "beauty": return "💄"
+        case "entertainment": return "🎬"
+        case "gift": return "🎁"
+        case "medical": return "🩺"
+        case "debt": return "💳"
+        case "daily": return "🛒"
+        case "salary": return "💰"
+        case "allowance": return "💸"
+        case "bonus": return "🎉"
+        case "freelance": return "🧑‍💻"
+        default: return "🧾"
         }
-        
-        // Reset UI
+    }
+
+    private func categoryColor(for transaction: Transaction) -> Color {
+        switch transaction.category?.name.lowercased() {
+        case "food": return .orange
+        case "clothing": return .purple
+        case "transport": return .blue
+        case "beauty": return .pink
+        case "entertainment": return .indigo
+        case "gift": return .red
+        case "medical": return .green
+        case "debt": return .gray
+        case "daily": return .yellow
+        case "salary", "allowance", "bonus", "freelance": return .green
+        default: return .gray
+        }
+    }
+
+    private func toggleSection(_ key: String) {
+        if expandedSections.contains(key) {
+            expandedSections.remove(key)
+        } else {
+            expandedSections.insert(key)
+        }
+    }
+
+    private func deleteAction() {
+        let itemsToDelete = transactions.filter { selectedItems.contains($0.id) }
+
+        for item in itemsToDelete {
+            modelContext.delete(item)
+        }
+
+        try? modelContext.save()
+
         showDeleteAlert = false
         isSelectionMode = false
         selectedItems.removeAll()
     }
 }
 
-// MARK: - Shape Helper
-struct RoundedCorner: Shape {
-    var radius: CGFloat = .infinity
-    var corners: UIRectCorner = .allCorners
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
-        return Path(path.cgPath)
-    }
-}
-
-#Preview {
-    TransactionListFlow()
+extension Color {
+    static let themeYellow = Color(red: 1.0, green: 0.98, blue: 0.88)
+    static let themePurple = Color(red: 0.92, green: 0.85, blue: 0.98)
+    static let themeGray = Color(red: 0.95, green: 0.95, blue: 0.95)
 }
