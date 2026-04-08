@@ -38,6 +38,7 @@ struct PetInfoCardView: View {
                 .stroke(Color(red: 155/255, green: 155/255, blue: 155/255), lineWidth: 1)
         )
         .frame(width: 346)
+        .background(Color(.white))
     }
 }
 

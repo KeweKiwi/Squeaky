@@ -21,10 +21,24 @@ struct RatWithLevelCardView: View {
     var xpInLevel: Int {
         currentXP % maxXP
     }
+    
+    var ratImageName: String {
+        switch level {
+        case 1:
+            return "RatLevel1"
+        case 5:
+            return "RatLevel5"
+        case 20:
+            return "RatLevel20"
+        default:
+            return "RatLevel1"
+        }
+    }
 
     var body: some View {
         VStack(spacing: 4) {
-            Image("RatLevel5")
+            Image(ratImageName).resizable().scaledToFit()
+                .frame(height: 150)
 
             HStack(spacing: 0) {
                 // Star badge with level number
@@ -84,6 +98,6 @@ struct RatWithLevelCardView: View {
     VStack(spacing: 20) {
         RatWithLevelCardView(level: 1, currentXP: 25, maxXP: 100)
         RatWithLevelCardView(level: 5, currentXP: 520, maxXP: 100)
-        RatWithLevelCardView(level: 10, currentXP: 1050, maxXP: 100)
+        RatWithLevelCardView(level: 20, currentXP: 1050, maxXP: 100)
     }
 }

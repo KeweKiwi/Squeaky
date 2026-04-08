@@ -28,7 +28,7 @@ struct GaugeArcView: View {
     let labels: [(String, Double, Double, CGFloat)] = [
         ("Low",    -180.0, -90.0, -20),
         ("Normal",  -90.0,   0.0,   0),
-        ("High",      0.0, -90.0, -20),
+        ("High",      0.0, 90.0, -20),
     ]
 
     // Needle angle: -180° (left) to 0° (right)
@@ -38,6 +38,7 @@ struct GaugeArcView: View {
 
     var body: some View {
         GeometryReader { geo in
+            //geo size width and height is from the frame size of the function being called
             let size = min(geo.size.width, geo.size.height)
             let radius = size / 2 - lineWidth / 2
             let center = CGPoint(x: geo.size.width / 2, y: geo.size.height * 0.75)
@@ -58,6 +59,7 @@ struct GaugeArcView: View {
                         startAngle: startAngle,
                         endAngle: endAngle,
                         lineWidth: lineWidth,
+                        //get color based on the index of segments in the array
                         startColor: segments[i].0,
                         endColor: segments[i].1
                     )
@@ -67,6 +69,7 @@ struct GaugeArcView: View {
                 ForEach(labels, id: \.0) { label, angleDeg, rotation, yOffset in
                     let angle = angleDeg * .pi / 180.0
                     let labelRadius = radius + lineWidth / 2 + 16
+                    
                     let x = center.x + labelRadius * cos(angle)
                     let y = center.y + labelRadius * sin(angle)
 

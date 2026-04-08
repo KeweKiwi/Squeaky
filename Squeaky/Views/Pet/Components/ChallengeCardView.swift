@@ -50,6 +50,7 @@ struct ChallengeCardView: View {
         .padding(.vertical, 8)
         .border(Color(red: 155/255, green: 155/255, blue: 155/255), width: 1)
         .frame(width: 346)
+        .background(Color(.white))
     }
 }
 
