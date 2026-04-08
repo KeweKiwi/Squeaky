@@ -6,11 +6,27 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct RatWithLevelCardView: View {
-    var level: Int
-    var currentXP: Int
-    var maxXP: Int
+    @Query private var pets: [Pet]
+    @Environment(\.modelContext) private var modelContext
+    
+    var pet: Pet? {
+            pets.first
+        }
+    
+    var level: Int {
+           pet?.level ?? 1
+       }
+
+       var currentXP: Int {
+           pet?.currentXP ?? 0
+       }
+
+       var maxXP: Int {
+           pet?.maxXP ?? 100
+       }
 
     // Progress within the current level (0.0 to 1.0)
     var progress: Double {
@@ -95,9 +111,6 @@ struct RatWithLevelCardView: View {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        RatWithLevelCardView(level: 1, currentXP: 25, maxXP: 100)
-        RatWithLevelCardView(level: 5, currentXP: 520, maxXP: 100)
-        RatWithLevelCardView(level: 20, currentXP: 1050, maxXP: 100)
-    }
+    RatWithLevelCardView()
+        .modelContainer(for: [Pet.self], inMemory: true)
 }

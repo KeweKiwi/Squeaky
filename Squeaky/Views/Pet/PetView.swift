@@ -1,7 +1,26 @@
 import SwiftUI
+import SwiftData
 
 struct PetView: View {
+    @Query private var challenges: [Challenge]
+    @Query private var pets: [Pet]
+    @Environment(\.modelContext) private var modelContext
+
     @State private var isShowInfo: Bool = false
+
+    private func completeChallenge(_ challenge: Challenge) {
+        guard !challenge.isCompleted, let pet = pets.first else { return }
+
+        challenge.isCompleted = true
+        pet.currentXP += challenge.experience_received
+
+        while pet.currentXP >= pet.maxXP {
+            pet.currentXP -= pet.maxXP
+            pet.level += 1
+        }
+
+        try? modelContext.save()
+    }
 
     var body: some View {
         NavigationStack {
@@ -33,11 +52,7 @@ struct PetView: View {
                                 GaugeArcView(value: 0.5)
                                     .frame(width: 300, height: 220)
 
-                                RatWithLevelCardView(
-                                    level: 20,
-                                    currentXP: 25,
-                                    maxXP: 100
-                                )
+                                RatWithLevelCardView()
                                 .frame(width: 400)
                                 .padding(.top, -90)
                             }
@@ -47,8 +62,13 @@ struct PetView: View {
                             Text("Small Challenges")
                                 .font(.system(size: 16, weight: .semibold))
 
-                            ForEach(1...4, id: \.self) { _ in
-                                ChallengeCardView(isCompleted: false)
+                            ForEach(challenges) { challenge in
+                                ChallengeCardView(
+                                    challenge: challenge,
+                                    onComplete: {
+                                        completeChallenge(challenge)
+                                    }
+                                )
                             }
                         }
 
@@ -116,5 +136,5 @@ struct PetView: View {
 }
 
 #Preview {
-    PetView()
+    PetView().modelContainer(for: [Challenge.self], inMemory: true)
 }
