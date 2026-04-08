@@ -89,12 +89,12 @@ struct ContentView: View {
         .modelContainer(for: [Category.self, Transaction.self, MonthlyBudget.self, SavingGoal.self, UserStats.self], inMemory: true)
     
     // LHO kenapa kok parameternya banyak? ya soalnya ini kan menu utama dan disini ada overview add sama transaction yang membutuhkan beberapa model
-
+    
     /*
      bcos ContentView di bawahnya bisa memakai beberapa model ini, misalnya:
-    -  TransactionListFlow pakai Transaction
-    - AddTransactionView pakai Category dan Transaction
-    - overview bisa pakai MonthlyBudget
+     -  TransactionListFlow pakai Transaction
+     - AddTransactionView pakai Category dan Transaction
+     - overview bisa pakai MonthlyBudget
      - dll
      
      Gak harus semua, tapi harus mencakup model yang dipakai oleh view itu dan anaknya.
