@@ -14,7 +14,7 @@ struct MonthlyRecapView: View {
     
     var body: some View {
         ZStack{
-        Image(recapImages[currentIndex])
+            Image(recapImages[currentIndex])
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
@@ -28,15 +28,35 @@ struct MonthlyRecapView: View {
                             .font(.largeTitle)
                             .accentColor(.white)
                             .animation(.easeInOut(duration: 0.3), value: currentIndex)
-            
                     }
                 }
-                Spacer()
+                .padding(.top, 25)
+                .padding(25)
+                HStack{
+                    Rectangle()
+                        .fill(Color.white.opacity(0.001))
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            if currentIndex > 0 {
+                                currentIndex -= 1
+                            }
+                        }
+                    Rectangle()
+                        .fill(Color.white.opacity(0.001))
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            if currentIndex < recapImages.count - 1 {
+                                currentIndex += 1
+                            } else {
+                                dismiss()
+                            }
+                        }
+                }
             }
-            .padding(25)
         }
+        .navigationBarBackButtonHidden(true)
     }
-}
-#Preview {
-    MonthlyRecapView()
-}
+        }
+    #Preview {
+        MonthlyRecapView()
+    }
