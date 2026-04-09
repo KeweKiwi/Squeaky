@@ -8,6 +8,7 @@ struct PetView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var isShowInfo: Bool = false
+    @State private var levelUpMessage: String?
 
     private func refreshChallengeStates() {
         for challenge in challenges {
@@ -36,12 +37,17 @@ struct PetView: View {
     private func completeChallenge(_ challenge: Challenge) {
         guard challenge.isCompleted, !challenge.isClaimed, let pet = pets.first else { return }
 
+        let startingLevel = pet.level
         challenge.isClaimed = true
         pet.currentXP += challenge.experienceReceived
 
         while pet.currentXP >= pet.maxXP {
             pet.currentXP -= pet.maxXP
             pet.level += 1
+        }
+
+        if pet.level > startingLevel {
+            levelUpMessage = "Squeaky reached level \(pet.level)!"
         }
 
         try? modelContext.save()
@@ -162,10 +168,37 @@ struct PetView: View {
                     }
                 }
             }
+            .alert("Level Up 🎉", isPresented: levelUpAlertBinding) {
+                Button("OK", role: .cancel) {
+                    levelUpMessage = nil
+                }
+            } message: {
+                Text(levelUpMessage ?? "")
+            }
         }
+    }
+
+    private var levelUpAlertBinding: Binding<Bool> {
+        Binding(
+            get: { levelUpMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    levelUpMessage = nil
+                }
+            }
+        )
     }
 }
 
 #Preview {
-    PetView().modelContainer(for: [Challenge.self], inMemory: true)
+    PetView()
+        .modelContainer(
+            for: [
+                Challenge.self,
+                Pet.self,
+                Transaction.self,
+                Category.self
+            ],
+            inMemory: true
+        )
 }

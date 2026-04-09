@@ -17,7 +17,7 @@ enum ChallengeDefinitions {
             limitAmount: 50000,
             targetCount: nil,
             durationDays: nil,
-            experienceReward: 10
+            experienceReward: 100
         ),
         ChallengeDefinition(
             id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
