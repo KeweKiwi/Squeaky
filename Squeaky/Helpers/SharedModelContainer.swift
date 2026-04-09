@@ -10,6 +10,8 @@ import SwiftData
 enum SharedModelContainer {
     static let appGroupID = "group.com.kevinfaith.squeaky"
 
+    
+    // Ini pakai .self karena model container butuh tipe data nya (blueprint) bukan isinya
     static let schema = Schema([
         Category.self,
         Transaction.self,

@@ -8,152 +8,98 @@
 import SwiftUI
 import SwiftData
 
+enum MainTab: Hashable {
+    case overview
+    case add
+    case transaction
+}
+
+
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    // modelContext = pintu akses view ke database itu
 
-    @Query(sort: \Transaction.date, order: .reverse)
-    private var transactions: [Transaction]
+    /*
+     Kapan perlu modelContext
 
-    @Query
-    private var budgets: [MonthlyBudget]
+     Perlu kalau view kamu:
+     - add transaction
+     - delete transaction
+     - edit transaction
+     - seed data
 
+     Tidak wajib kalau view kamu cuma baca pakai @Query
+     */
+    
+    
+    @State private var selectedTab: MainTab = .overview
+    @State private var previousTab: MainTab = .overview
+    @State private var showAddSheet = false
+// Perlu state soalnya mengubah tampilan UI (ingat kata mr ricky xD)
+    
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 16) {
-                summarySection
-
-                if transactions.isEmpty {
-                    ContentUnavailableView(
-                        "No Transactions Yet",
-                        systemImage: "tray",
-                        description: Text("Transactions from your shortcut or app will appear here.")
-                    )
-                } else {
-                    List {
-                        ForEach(transactions) { transaction in
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack {
-                                    Text(transaction.title)
-                                        .font(.headline)
-
-                                    Spacer()
-
-                                    Text(currency(transaction.amount))
-                                        .font(.subheadline)
-                                        .foregroundStyle(
-                                            transaction.type == .income ? .green : .red
-                                        )
-                                }
-
-                                Text("\(transaction.category?.name ?? "-") • \(transaction.type.rawValue.capitalized)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-
-                                Text(transaction.date, style: .date)
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                            }
-                            .padding(.vertical, 4)
-                        }
-                        .onDelete(perform: deleteTransactions)
+            TabView(selection: $selectedTab) {
+                OverviewView()
+                    .tabItem {
+                        Image(systemName: "house")
+                        Text("Overview")
                     }
-                    .listStyle(.plain)
+                    .tag(MainTab.overview)
+
+                Color.clear
+                    .tabItem {
+                        Image(systemName: "plus.app")
+                        Text("Add")
+                    }
+                    .tag(MainTab.add)
+
+                TransactionListFlow()
+                    .tabItem {
+                        Image(systemName: "list.bullet.rectangle")
+                        Text("Transaction")
+                    }
+                    .tag(MainTab.transaction)
+            }
+            .onChange(of: selectedTab) { _, newValue in
+                if newValue == .add {
+                    selectedTab = previousTab
+                    showAddSheet = true
+                } else {
+                    previousTab = newValue
                 }
             }
-            .padding()
-            .navigationTitle("Squeaky")
-        }
-        .task {
-            SeedData.seedCategoriesIfNeeded(context: modelContext)
-            BudgetSeedData.seedBudgetIfNeeded(context: modelContext)
-            TransactionSeedData.seedTransactionsIfNeeded(context: modelContext)
-        }
-    }
-
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Balance: \(currency(balance))")
-                .font(.title3)
-                .bold()
-
-            Text("Income: \(currency(totalIncome))")
-            Text("Expense: \(currency(totalExpense))")
-            Text("Budget: \(currency(currentBudget))")
-            Text("Cortisol: \(cortisolStatus)")
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-
-    private var totalIncome: Decimal {
-        transactions
-            .filter { $0.type == .income }
-            .reduce(0) { $0 + $1.amount }
-    }
-
-    private var totalExpense: Decimal {
-        transactions
-            .filter { $0.type == .expense }
-            .reduce(0) { $0 + $1.amount }
-    }
-
-    private var balance: Decimal {
-        totalIncome - totalExpense
-    }
-
-    private var currentBudget: Decimal {
-        let calendar = Calendar.current
-        let month = calendar.component(.month, from: .now)
-        let year = calendar.component(.year, from: .now)
-
-        return Decimal(budgets.first(where: { $0.month == month && $0.year == year })?.budgetAmount ?? 0)
-    }
-
-    private var cortisolStatus: String {
-        guard currentBudget > 0 else { return "No Budget" }
-
-        let expense = NSDecimalNumber(decimal: totalExpense).doubleValue
-        let budget = NSDecimalNumber(decimal: currentBudget).doubleValue
-        let ratio = expense / budget
-
-        if ratio < 0.7 {
-            return "Low"
-        } else if ratio <= 1.0 {
-            return "Medium"
-        } else {
-            return "High"
+            .sheet(isPresented: $showAddSheet) {
+                AddTransactionView()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
+            }
+            .task {
+                SeedData.seedCategoriesIfNeeded(context: modelContext)
+                BudgetSeedData.seedBudgetIfNeeded(context: modelContext)
+                TransactionSeedData.seedTransactionsIfNeeded(context: modelContext)
+            }
+            .toolbarBackground(.white, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
         }
     }
-
-    private func deleteTransactions(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(transactions[index])
-        }
-
-        try? modelContext.save()
-    }
-
-    private func currency(_ value: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale(identifier: "id_ID")
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSDecimalNumber(decimal: value)) ?? "Rp0"
-    }
-}
 
 #Preview {
     ContentView()
-        .modelContainer(
-            for: [
-                Category.self,
-                Transaction.self,
-                MonthlyBudget.self,
-                SavingGoal.self,
-                UserStats.self
-            ],
-            inMemory: true
-        )
+        .modelContainer(for: [Category.self, Transaction.self, MonthlyBudget.self, SavingGoal.self, UserStats.self], inMemory: true)
+    
+    // LHO kenapa kok parameternya banyak? ya soalnya ini kan menu utama dan disini ada overview add sama transaction yang membutuhkan beberapa model
+    
+    /*
+     bcos ContentView di bawahnya bisa memakai beberapa model ini, misalnya:
+     -  TransactionListFlow pakai Transaction
+     - AddTransactionView pakai Category dan Transaction
+     - overview bisa pakai MonthlyBudget
+     - dll
+     
+     Gak harus semua, tapi harus mencakup model yang dipakai oleh view itu dan anaknya.
+     so preview dikasih semua model yang mungkin dibutuhkan.
+     */
 }
+
+
