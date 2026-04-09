@@ -40,12 +40,12 @@ struct RatWithLevelCardView: View {
     
     var ratImageName: String {
         switch level {
+        case 20...:
+            return "RatLevel20"
+        case 5...:
+            return "RatLevel5"
         case 1:
             return "RatLevel1"
-        case 5:
-            return "RatLevel5"
-        case 20:
-            return "RatLevel20"
         default:
             return "RatLevel1"
         }

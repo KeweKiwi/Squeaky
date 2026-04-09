@@ -148,6 +148,12 @@ struct PetView: View {
                             Text(
                             """
                             Help Squeaky level up by completing daily mini challenges and maintain it’s cortisol level. Don’t let Squeaky get stressed out!
+
+                            Upon every challenge completion, you will receive a certain amount of xp (as shown underneath each challenge), which will contribute to the increase of Squeaky’s level.
+
+                            Squeaky’s cortisol level depends on how you manage your monthly budget. As long as your spending stays within the budget limit, Squeaky’s cortisol level will remain low to normal. However, when your spending gets closer or exceeds the limit, the cortisol indicator will move toward a higher cortisol level, making Squeaky stressed and anxious.
+
+
                             """
                             )
                             .multilineTextAlignment(.center)
