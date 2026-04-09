@@ -16,7 +16,7 @@ enum PetSeedData {
         else { return }
 
         let defaultPet = Pet(
-            level: 1,
+            level: 4,
             currentXP: 0,
             maxXP: 100
         )

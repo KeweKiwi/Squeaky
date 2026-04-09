@@ -4,15 +4,40 @@ import SwiftData
 struct PetView: View {
     @Query private var challenges: [Challenge]
     @Query private var pets: [Pet]
+    @Query private var transactions: [Transaction]
     @Environment(\.modelContext) private var modelContext
 
     @State private var isShowInfo: Bool = false
 
-    private func completeChallenge(_ challenge: Challenge) {
-        guard !challenge.isCompleted, let pet = pets.first else { return }
+    private func refreshChallengeStates() {
+        for challenge in challenges {
+            guard let definition = ChallengeDefinitions.all.first(where: { $0.id == challenge.definitionId }) else {
+                continue
+            }
 
-        challenge.isCompleted = true
-        pet.currentXP += challenge.experience_received
+            if ChallengeHelper.shouldReset(
+                lastResetDate: challenge.lastResetDate,
+                resetType: definition.resetType
+            ) {
+                challenge.isCompleted = false
+                challenge.isClaimed = false
+                challenge.lastResetDate = Date()
+            }
+
+            challenge.isCompleted = ChallengeHelper.evaluate(
+                definition: definition,
+                transactions: transactions
+            )
+        }
+
+        try? modelContext.save()
+    }
+
+    private func completeChallenge(_ challenge: Challenge) {
+        guard challenge.isCompleted, !challenge.isClaimed, let pet = pets.first else { return }
+
+        challenge.isClaimed = true
+        pet.currentXP += challenge.experienceReceived
 
         while pet.currentXP >= pet.maxXP {
             pet.currentXP -= pet.maxXP
@@ -93,6 +118,12 @@ struct PetView: View {
                     }
                     .padding(20)
                 }
+            }
+            .onAppear {
+                refreshChallengeStates()
+            }
+            .onChange(of: transactions.count) { _, _ in
+                refreshChallengeStates()
             }
 
             // ✅ MUST be INSIDE NavigationStack

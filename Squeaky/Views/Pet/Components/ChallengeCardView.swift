@@ -16,6 +16,34 @@ struct ChallengeCardView: View {
         green: 92/255,
         blue: 199/255
     )
+
+    private var challengeDefinition: ChallengeDefinition? {
+        ChallengeDefinitions.all.first { $0.id == challenge.definitionId }
+    }
+
+    private var challengeName: String {
+        challengeDefinition?.name ?? "Challenge"
+    }
+
+    private var experienceReward: Int {
+        challengeDefinition?.experienceReward ?? 0
+    }
+
+    private var buttonTitle: String {
+        if challenge.isClaimed {
+            return "Claimed"
+        }
+
+        if !challenge.isCompleted {
+            return "Not Finished"
+        }
+
+        return "Claim"
+    }
+
+    private var isButtonEnabled: Bool {
+        challenge.isCompleted && !challenge.isClaimed
+    }
     
     var body: some View {
         HStack(){
@@ -36,16 +64,38 @@ struct ChallengeCardView: View {
             }
             
             VStack(alignment: .leading, spacing: 2){
-                Text(challenge.challenge_name)
+                Text(challengeName)
                     .font(.system(size: 12))
                     .fontWeight(.medium)
                 
-                Text("\(Text("+\(challenge.experience_received) ").foregroundStyle(.primary))\(Text("experience point").foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255)))")
+                Text("\(Text("+\(experienceReward) ").foregroundStyle(.primary))\(Text("experience point").foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255)))")
                     .font(.system(size: 8))
                     .fontWeight(.light)
             }
             
             Spacer()
+            
+            Button {
+                onComplete()
+            } label: {
+                Text(buttonTitle)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(challenge.isClaimed ? .white : .black)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(
+                                challenge.isClaimed
+                                ? completedColor
+                                : isButtonEnabled
+                                ? Color(red: 248/255, green: 206/255, blue: 23/255)
+                                : Color(red: 231/255, green: 231/255, blue: 231/255)
+                            )
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(!isButtonEnabled)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -53,19 +103,15 @@ struct ChallengeCardView: View {
         .frame(width: 346)
         .background(Color(.white))
         .contentShape(Rectangle())
-        .onTapGesture {
-            guard !challenge.isCompleted else { return }
-            onComplete()
-        }
     }
 }
 
 #Preview {
     ChallengeCardView(
         challenge: Challenge(
-            challenge_name: "Track your spending",
-            experience_received: 10,
-            isCompleted: false
+            definitionId: ChallengeDefinitions.all[0].id,
+            isCompleted: false,
+            experienceReceived: ChallengeDefinitions.all[0].experienceReward
         ),
         onComplete: {}
     )

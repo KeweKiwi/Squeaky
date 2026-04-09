@@ -21,7 +21,7 @@ enum BudgetSeedData {
         let budget = MonthlyBudget(
             month: currentMonth,
             year: currentYear,
-            budgetAmount: 2000000
+            budgetAmount: 400000
         )
 
         context.insert(budget)

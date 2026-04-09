@@ -9,21 +9,33 @@ import Foundation
 import SwiftData
 
 @Model
-final class Challenge: Identifiable {
+final class Challenge {
     var id: UUID
-    var challenge_name: String
-    var experience_received: Int
+    
+    // 🔗 Link to definition
+    var definitionId: UUID
+    var experienceReceived: Int
+    
+    // State
     var isCompleted: Bool
+    var isClaimed: Bool
+    
+    // Reset tracking
+    var lastResetDate: Date
     
     init(
         id: UUID = UUID(),
-        challenge_name: String,
-        experience_received: Int,
-        isCompleted: Bool = false
-    ){
+        definitionId: UUID,
+        isCompleted: Bool = false,
+        isClaimed: Bool = false,
+        lastResetDate: Date = Date(),
+        experienceReceived: Int
+    ) {
         self.id = id
-        self.challenge_name = challenge_name
-        self.experience_received = experience_received
+        self.definitionId = definitionId
+        self.experienceReceived = experienceReceived
         self.isCompleted = isCompleted
+        self.isClaimed = isClaimed
+        self.lastResetDate = lastResetDate
     }
 }

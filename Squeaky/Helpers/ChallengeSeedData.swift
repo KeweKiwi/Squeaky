@@ -15,32 +15,13 @@ enum ChallengeSeedData {
         guard let existing = try? context.fetch(descriptor), existing.isEmpty
         else { return }
 
-        let challenges: [Challenge] = [
+        let challenges = ChallengeDefinitions.all.map { definition in
             Challenge(
-                id: UUID(),
-                challenge_name: "Track your spending",
-                experience_received: 10,
-                isCompleted: false
-            ),
-            Challenge(
-                id: UUID(),
-                challenge_name: "Stay under budget",
-                experience_received: 20,
-                isCompleted: false
-            ),
-            Challenge(
-                id: UUID(),
-                challenge_name: "Log 3 transactions",
-                experience_received: 15,
-                isCompleted: false
-            ),
-            Challenge(
-                id: UUID(),
-                challenge_name: "No impulse buying",
-                experience_received: 25,
-                isCompleted: false
+                definitionId: definition.id,
+                isCompleted: false,
+                experienceReceived: definition.experienceReward
             )
-        ]
+        }
         
         for challenge in challenges {
             context.insert(challenge)

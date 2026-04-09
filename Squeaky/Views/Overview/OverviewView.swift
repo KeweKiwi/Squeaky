@@ -204,7 +204,9 @@ struct OverviewView: View {
                                 }
                             }
                         }
+                        .frame(maxWidth: .infinity)
                         .aspectRatio(1, contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -235,7 +237,10 @@ struct OverviewView: View {
                                 .padding(10)
                             }
                         }
+                        .frame(maxWidth: .infinity)
                         .aspectRatio(1, contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .contentShape(Rectangle())
                     }
                 }
 
