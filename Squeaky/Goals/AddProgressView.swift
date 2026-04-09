@@ -90,7 +90,7 @@ struct AddProgressView: View {
                             .background(Color(red: 0.9, green: 0.9, blue: 0.93))
                             .cornerRadius(25)
                     }
-                    .padding(.top, 40)
+                    .padding(.top, 20)
                     
                     // Add Button
                     Button(action: {

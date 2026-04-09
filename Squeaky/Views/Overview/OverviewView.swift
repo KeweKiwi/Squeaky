@@ -263,13 +263,10 @@ struct OverviewView: View {
                         
                         Spacer()
                         
-                        NavigationLink(destination: Text("Add Saving Goal Page")) {
-                            Image(systemName: "plus")
-                                .font(.headline)
-                                .foregroundColor(.black)
-                                .padding(10)
-                                .background(Color.white)
-                                .clipShape(Circle())
+                        NavigationLink(destination: SavingGoalsView()) {
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.secondary)
                         }
                     }
                     
