@@ -13,7 +13,9 @@ struct SqueakyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+//            SavingGoalsView()
         }
         .modelContainer(SharedModelContainer.container)
+//        .modelContainer(for: [SavingGoal.self, MonthlyBudget.self])
     }
 }

@@ -64,6 +64,7 @@ struct GoalFormContainerView<Actions: View>: View {
     @Binding var timeSpan: Date
     @Binding var nominalAmount: String
     @ViewBuilder let actions: () -> Actions
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
@@ -79,6 +80,14 @@ struct GoalFormContainerView<Actions: View>: View {
 
                     HStack {
                         Spacer()
+
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 18, weight: .bold))
+                        }
+                        .buttonStyle(.glass(.regular))
+                        .controlSize(.regular)
+                        .buttonBorderShape(.circle)
                     }
                     .padding(.trailing, 24)
                 }

@@ -8,42 +8,31 @@
 import SwiftUI
 
 struct GoalRow: View {
-    var title: String
-    var progress: CGFloat
+    var goal: SavingGoal
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            
             HStack {
-                Text(title)
-                    .font(.headline)
-                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(goal.title)
+                        .font(.headline)
+
+                    Text(SavingGoalService.progressSummary(for: goal))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
                 Spacer()
-                
-                NavigationLink(destination: GoalProgressView()) {
+
+                NavigationLink(destination: GoalProgressView(goal: goal)) {
                     Image(systemName: "pencil.line")
-                        .font(.system(size: 14, weight: .bold))
-                }
-                .buttonStyle(.glass(.regular))
-                .buttonBorderShape(.circle)
-            }
-            
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.purple.opacity(0.3))
-                        .frame(height: 12)
-                    
-                    Capsule()
-                        .fill(Color.white)
-                        .frame(width: geo.size.width * progress, height: 12)
-                        .animation(.easeInOut, value: progress) 
                 }
             }
-            .frame(height: 12)
+
+            Chart(progress: SavingGoalService.progress(for: goal), height: 12)
         }
-        .padding(20)
-        .background(Color(red: 0.95, green: 0.88, blue: 1.0))
+        .padding()
+        .background(Color.purple.opacity(0.2))
         .cornerRadius(16)
     }
 }

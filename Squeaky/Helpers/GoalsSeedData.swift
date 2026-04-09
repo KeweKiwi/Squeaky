@@ -22,15 +22,13 @@ enum SavingGoalSeedData {
                 title: "Buy Macbook",
                 targetAmount: 15000000,
                 currentAmount: 3000000,
-                targetDate: Calendar.current.date(byAdding: .month, value: 6, to: .now)!,
-                priority: true
+                targetDate: Calendar.current.date(byAdding: .month, value: 6, to: .now)!
             ),
             SavingGoal(
                 title: "Goes to Bali",
                 targetAmount: 5000000,
                 currentAmount: 1000000,
-                targetDate: Calendar.current.date(byAdding: .month, value: 10, to: .now)!,
-                priority: false
+                targetDate: Calendar.current.date(byAdding: .month, value: 10, to: .now)!
             )
         ]
 

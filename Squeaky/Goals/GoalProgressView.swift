@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct GoalProgressView: View {
+    let goal: SavingGoal
     
     @State private var showingEditModal = false
     @State private var showingAddModal = false
@@ -28,10 +29,8 @@ struct GoalProgressView: View {
                     Spacer()
                     
                     VStack(spacing: 8) {
-                        Text("Goal #1")
-                            .font(.system(size: 38, weight: .bold))
-                        Text("Buy BMW")
-                            .font(.system(size: 28, weight: .medium))
+                        Text(goal.title)
+                            .font(.system(size: 34, weight: .bold))
                     }
                     .padding(.bottom, 150)
                 }
@@ -40,21 +39,14 @@ struct GoalProgressView: View {
 
             // MARK: - Progress Content
             VStack(spacing: 30) {
-                Text("Rp xxx.xxx.xxx / Rp xxx.xxx.xxx")
+                Text(SavingGoalService.progressSummary(for: goal))
                     .font(.system(size: 18))
                     .foregroundColor(.black.opacity(0.8))
                     .padding(.top, 40)
-                
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(height: 34)
-                    
-                    Capsule()
-                        .fill(Color(red: 0.65, green: 0.52, blue: 0.78))
-                        .frame(width: 250, height: 34)
-                }
-                .padding(.horizontal, 40)
+
+                Chart(progress: SavingGoalService.progress(for: goal), height: 24)
+                    .frame(height: 24)
+                    .padding(.horizontal, 40)
                 
                 Button(action: {
                     showingAddModal = true
@@ -76,19 +68,6 @@ struct GoalProgressView: View {
         .navigationBarTitleDisplayMode(.inline)
         
         .toolbar {
-            
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    dismiss()
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                }
-            }
-            
-            
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
                     showingEditModal = true
@@ -104,11 +83,13 @@ struct GoalProgressView: View {
         
         // MARK: - Sheets
         .sheet(isPresented: $showingEditModal) {
-            EnterGoalView()
+            EditGoalView(goal: goal) {
+                dismiss()
+            }
                 .presentationDetents([.large])
         }
         .sheet(isPresented: $showingAddModal) {
-            AddProgressView()
+            AddProgressView(goal: goal)
                 .presentationDetents([.large])
         }
     }
@@ -116,6 +97,11 @@ struct GoalProgressView: View {
 
 #Preview {
     NavigationStack {
-        GoalProgressView()
+        GoalProgressView(
+            goal: SavingGoal(
+                title: "Buy BMW",
+                targetAmount: 100_000_000
+            )
+        )
     }
 }

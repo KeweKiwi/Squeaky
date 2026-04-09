@@ -20,6 +20,8 @@ struct EditGoalView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
+    @Query private var budgets: [MonthlyBudget]
+
     init(goal: SavingGoal, onDelete: (() -> Void)? = nil) {
         self.goal = goal
         self.onDelete = onDelete
@@ -81,6 +83,14 @@ struct EditGoalView: View {
     }
 
     private func deleteGoal() {
+        let refundedAmount = NSDecimalNumber(decimal: goal.currentAmount).doubleValue
+
+        BudgetService.refundProgress(
+            amount: refundedAmount,
+            context: context,
+            budgets: budgets
+        )
+
         context.delete(goal)
 
         do {

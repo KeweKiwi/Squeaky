@@ -37,6 +37,7 @@ struct SavingGoalsView: View {
                 EnterGoalView()
             }
             .onAppear {
+                BudgetSeedData.seedBudgetIfNeeded(context: context)
                 SavingGoalSeedData.seedSavingGoalsIfNeeded(context: context)
             }
         }
@@ -76,7 +77,7 @@ private extension SavingGoalsView {
     }
     
     var headerContent: some View {
-        VStack {
+        VStack(spacing: 16) {
             Text("Total Saving")
                 .font(.headline)
                 .foregroundColor(.black)
@@ -85,8 +86,14 @@ private extension SavingGoalsView {
                 .font(.title3)
                 .bold()
                 .foregroundColor(.black)
+
+            Text("\(SavingGoalService.totalSaving(goals: goals)) / \(SavingGoalService.totalTarget(goals: goals))")
+                .font(.subheadline)
+                .foregroundColor(.black.opacity(0.7))
+
+            DonutChart(progress: SavingGoalService.totalProgress(goals: goals), lineWidth: 18, size: 170)
         }
-        .padding(.top, 120)
+        .padding(.top, 110)
     }
 }
 
@@ -106,10 +113,7 @@ private extension SavingGoalsView {
                     
                     
                     ForEach(goals) { goal in
-                        GoalRow(
-                            title: goal.title,
-                            progress: SavingGoalService.progress(for: goal)
-                        )
+                        GoalRow(goal: goal)
                     }
                 }
                 .padding(.horizontal)
