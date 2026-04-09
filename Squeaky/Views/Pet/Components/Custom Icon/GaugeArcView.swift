@@ -6,11 +6,53 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct GaugeArcView: View {
+    
+    @Query(sort: \Transaction.date, order: .reverse)
+    private var transactions: [Transaction]
+
+    @Query
+    private var budgets: [MonthlyBudget]
+    
+    
+    private var currentMonthTransactions: [Transaction] {
+        let calendar = Calendar.current
+        return transactions.filter {
+            calendar.isDate($0.date, equalTo: .now, toGranularity: .month) &&
+            calendar.isDate($0.date, equalTo: .now, toGranularity: .year)
+        }
+    }
+    
+    private var currentMonthExpense: Decimal {
+        currentMonthTransactions
+            .filter { $0.type == .expense }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    private var currentMonthBudget: Decimal {
+        let calendar = Calendar.current
+        let currentMonth = calendar.component(.month, from: .now)
+        let currentYear = calendar.component(.year, from: .now)
+
+        let budget = budgets.first(where: {
+            $0.month == currentMonth && $0.year == currentYear
+        })?.budgetAmount ?? 0
+
+        return Decimal(budget)
+    }
+
+    private var spentRatio: Double {
+        guard currentMonthBudget > 0 else { return 0 }
+        let spent = NSDecimalNumber(decimal: currentMonthExpense).doubleValue
+        let budget = NSDecimalNumber(decimal: currentMonthBudget).doubleValue
+        return min(spent / budget, 1.0)
+    }
+    
     /// 0.0 = far left (Low), 1.0 = far right (High)
     var value: Double = 0.5
-
+    
     let segments: [(Color, Color)] = [
         (Color(hex: "2ECC71"), Color(hex: "5DBE4A")),
         (Color(hex: "5DBE4A"), Color(hex: "A8CE3B")),
@@ -33,7 +75,7 @@ struct GaugeArcView: View {
 
     // Needle angle: -180° (left) to 0° (right)
     private var needleAngle: Double {
-        -180.0 + value * 180.0
+        -180.0 + spentRatio * 180.0
     }
 
     var body: some View {

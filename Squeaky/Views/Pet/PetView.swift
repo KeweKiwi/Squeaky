@@ -1,7 +1,57 @@
 import SwiftUI
+import SwiftData
 
 struct PetView: View {
+    @Query private var challenges: [Challenge]
+    @Query private var pets: [Pet]
+    @Query private var transactions: [Transaction]
+    @Environment(\.modelContext) private var modelContext
+
     @State private var isShowInfo: Bool = false
+    @State private var levelUpMessage: String?
+
+    private func refreshChallengeStates() {
+        for challenge in challenges {
+            guard let definition = ChallengeDefinitions.all.first(where: { $0.id == challenge.definitionId }) else {
+                continue
+            }
+
+            if ChallengeHelper.shouldReset(
+                lastResetDate: challenge.lastResetDate,
+                resetType: definition.resetType
+            ) {
+                challenge.isCompleted = false
+                challenge.isClaimed = false
+                challenge.lastResetDate = Date()
+            }
+
+            challenge.isCompleted = ChallengeHelper.evaluate(
+                definition: definition,
+                transactions: transactions
+            )
+        }
+
+        try? modelContext.save()
+    }
+
+    private func completeChallenge(_ challenge: Challenge) {
+        guard challenge.isCompleted, !challenge.isClaimed, let pet = pets.first else { return }
+
+        let startingLevel = pet.level
+        challenge.isClaimed = true
+        pet.currentXP += challenge.experienceReceived
+
+        while pet.currentXP >= pet.maxXP {
+            pet.currentXP -= pet.maxXP
+            pet.level += 1
+        }
+
+        if pet.level > startingLevel {
+            levelUpMessage = "Squeaky reached level \(pet.level)!"
+        }
+
+        try? modelContext.save()
+    }
 
     var body: some View {
         NavigationStack {
@@ -33,11 +83,7 @@ struct PetView: View {
                                 GaugeArcView(value: 0.5)
                                     .frame(width: 300, height: 220)
 
-                                RatWithLevelCardView(
-                                    level: 20,
-                                    currentXP: 25,
-                                    maxXP: 100
-                                )
+                                RatWithLevelCardView()
                                 .frame(width: 400)
                                 .padding(.top, -90)
                             }
@@ -47,8 +93,13 @@ struct PetView: View {
                             Text("Small Challenges")
                                 .font(.system(size: 16, weight: .semibold))
 
-                            ForEach(1...4, id: \.self) { _ in
-                                ChallengeCardView(isCompleted: false)
+                            ForEach(challenges) { challenge in
+                                ChallengeCardView(
+                                    challenge: challenge,
+                                    onComplete: {
+                                        completeChallenge(challenge)
+                                    }
+                                )
                             }
                         }
 
@@ -74,6 +125,12 @@ struct PetView: View {
                     .padding(20)
                 }
             }
+            .onAppear {
+                refreshChallengeStates()
+            }
+            .onChange(of: transactions.count) { _, _ in
+                refreshChallengeStates()
+            }
 
             // ✅ MUST be INSIDE NavigationStack
             .navigationBarTitleDisplayMode(.inline)
@@ -91,6 +148,12 @@ struct PetView: View {
                             Text(
                             """
                             Help Squeaky level up by completing daily mini challenges and maintain it’s cortisol level. Don’t let Squeaky get stressed out!
+
+                            Upon every challenge completion, you will receive a certain amount of xp (as shown underneath each challenge), which will contribute to the increase of Squeaky’s level.
+
+                            Squeaky’s cortisol level depends on how you manage your monthly budget. As long as your spending stays within the budget limit, Squeaky’s cortisol level will remain low to normal. However, when your spending gets closer or exceeds the limit, the cortisol indicator will move toward a higher cortisol level, making Squeaky stressed and anxious.
+
+
                             """
                             )
                             .multilineTextAlignment(.center)
@@ -111,10 +174,37 @@ struct PetView: View {
                     }
                 }
             }
+            .alert("Level Up 🎉", isPresented: levelUpAlertBinding) {
+                Button("OK", role: .cancel) {
+                    levelUpMessage = nil
+                }
+            } message: {
+                Text(levelUpMessage ?? "")
+            }
         }
+    }
+
+    private var levelUpAlertBinding: Binding<Bool> {
+        Binding(
+            get: { levelUpMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    levelUpMessage = nil
+                }
+            }
+        )
     }
 }
 
 #Preview {
     PetView()
+        .modelContainer(
+            for: [
+                Challenge.self,
+                Pet.self,
+                Transaction.self,
+                Category.self
+            ],
+            inMemory: true
+        )
 }
