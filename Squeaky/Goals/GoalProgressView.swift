@@ -73,12 +73,9 @@ struct GoalProgressView: View {
             Spacer()
         }
         .background(Color.white)
-        
-        
         .navigationBarTitleDisplayMode(.inline)
         
         .toolbar {
-            
             
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
@@ -104,7 +101,6 @@ struct GoalProgressView: View {
         
         // Optional styling
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color.white, for: .navigationBar)
         
         // MARK: - Sheets
         .sheet(isPresented: $showingEditModal) {

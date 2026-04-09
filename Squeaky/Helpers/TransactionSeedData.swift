@@ -11,13 +11,14 @@ import SwiftData
 enum TransactionSeedData {
     static func seedTransactionsIfNeeded(context: ModelContext) {
         let transactionDescriptor = FetchDescriptor<Transaction>()
-
         guard let existingTransactions = try? context.fetch(transactionDescriptor),
               existingTransactions.isEmpty else { return }
 
+        
         let categoryDescriptor = FetchDescriptor<Category>()
         guard let categories = try? context.fetch(categoryDescriptor) else { return }
 
+        
         let food = categories.first(where: { $0.name == "Food" && $0.type == .expense })
         let clothing = categories.first(where: { $0.name == "Clothing" && $0.type == .expense })
         let transport = categories.first(where: { $0.name == "Transport" && $0.type == .expense })

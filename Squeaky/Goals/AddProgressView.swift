@@ -6,10 +6,15 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AddProgressView: View {
     @State private var amount: String = ""
+    
     @Environment(\.dismiss) var dismiss // To close the modal
+    @Environment(\.modelContext) private var context
+    
+    @Query private var budgets: [MonthlyBudget]
 
     var body: some View {
         ZStack {
@@ -75,10 +80,19 @@ struct AddProgressView: View {
                     
                     // Add Button
                     Button(action: {
-                        // Add logic here
                         
-                        
-                        dismiss()
+                        guard let amountDecimal = Double(amount),
+                              amountDecimal > 0 else { return }
+
+                        let success = BudgetService.addProgress(
+                            amount: amountDecimal,
+                            context: context,
+                            budgets: budgets
+                        )
+
+                        if success {
+                            dismiss()
+                        }
                     }) {
                         Text("Add")
                             .font(.headline)
