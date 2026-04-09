@@ -8,8 +8,12 @@
 import SwiftUI
 import SwiftData
 import Charts
+import AppIntents
 
 struct OverviewView: View {
+    
+    @State private var isCensored: Bool = false
+
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
 
@@ -98,6 +102,7 @@ struct OverviewView: View {
     }
 
     var body: some View {
+        
         ScrollView {
             VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 20) {
@@ -106,36 +111,47 @@ struct OverviewView: View {
                             .font(.system(size: 32))
                             .bold()
                         Spacer()
-                        NavigationLink(destination: Text("Monthly Recap Page")) {
+                        NavigationLink(destination:MonthlyRecapView()) {
                             Image("Fitur")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 40, height: 50)
                         }
                     }
-
-                    Text("Overview")
-                        .font(.title2)
-                        .bold()
+                    
+                    HStack{
+                        
+                        Text("Overview")
+                            .font(.title2)
+                            .bold()
+                        Spacer()
+                        Button(action: {
+                            isCensored.toggle()
+                        }) {
+                            Image(systemName: isCensored ? "eye.slash.fill" : "eye.fill")
+                                .foregroundColor(.gray)
+                                .font(.title3)
+                        }
+                    }
                 }
 
                 HStack(spacing: 5) {
                     summaryCard(
                         icon: "wallet.bifold.fill",
                         title: "Balance",
-                        value: currency(balance)
+                        value: (isCensored ? "*** ***" : currency(balance))
                     )
 
                     summaryCard(
                         icon: "arrowshape.up.circle.fill",
                         title: "Income",
-                        value: currency(totalIncome)
+                        value: (isCensored ? "*** ***" : currency(totalIncome))
                     )
 
                     summaryCard(
                         icon: "minus.circle.fill",
                         title: "Expense",
-                        value: currency(totalExpense)
+                        value: (isCensored ? "*** ***" : currency(totalExpense))
                     )
                 }
 
@@ -163,7 +179,6 @@ struct OverviewView: View {
                     )
                     .scaleEffect(x: 1, y: 3, anchor: .center)
                     .tint(.orange)
-
                     Text("\(currency(currentMonthExpense)) / \(currency(currentMonthBudget))")
                         .font(.headline)
                 }
@@ -202,6 +217,7 @@ struct OverviewView: View {
                             }
                         }
                     }
+                    .frame(maxWidth: .infinity)
                     .aspectRatio(1, contentMode: .fit)
 
                     NavigationLink(destination: Text("Bigger Pie Chart")) {
@@ -230,6 +246,7 @@ struct OverviewView: View {
                                 .padding(10)
                             }
                         }
+                        .frame(maxWidth: .infinity)
                         .aspectRatio(1, contentMode: .fit)
                     }
                 }
