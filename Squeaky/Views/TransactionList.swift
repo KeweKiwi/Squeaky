@@ -12,13 +12,22 @@ struct TransactionListFlow: View {
 
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
-
+    
+//Ini State Variables
     @State private var isSelectionMode = false
     @State private var selectedItems = Set<UUID>()
     @State private var showDeleteAlert = false
     @State private var selectedSegment: TransactionFilter = .all
     @State private var expandedSections = Set<String>()
 
+//Ini buat Month & Year Selection (custom soalnya gmw pake date)
+    @State private var selectedMonth: String = "April"
+    @State private var selectedYear: Int = 2026
+    @State private var showDatePicker = false
+    
+    let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    let years = Array(2020...2030)
+    
     private var filteredTransactions: [Transaction] {
         switch selectedSegment {
         case .all:
@@ -49,7 +58,7 @@ struct TransactionListFlow: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: -20) {
+            VStack(spacing: -30) {
                 headerSection
 
                 ScrollView {
@@ -66,6 +75,11 @@ struct TransactionListFlow: View {
                                 dailyGroupView(group: group)
                             }
                         }
+                    }
+                }
+                .onAppear {
+                    for group in groupedTransactions {
+                        expandedSections.insert(group.dateKey)
                     }
                 }
             }
@@ -105,11 +119,31 @@ struct TransactionListFlow: View {
             .padding(.horizontal)
 
             HStack(spacing: 20) {
-                Image(systemName: "chevron.left")
-                Text(monthYearTitle)
-                    .font(.title3)
-                    .fontWeight(.bold)
-                Image(systemName: "chevron.right")
+                Button(action: {
+                    withAnimation { changeMonth(by: -1) }
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.black)
+                        .padding(5)
+                }
+                // Ini aku add button to the text utk trigger the picker modal
+                Button(action: { showDatePicker = true }) {
+                    Text("\(selectedMonth) \(String(selectedYear))")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.black)
+                }
+                Button(action: {
+                    withAnimation { changeMonth(by: 1)}
+                }) {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.black)
+                        .padding(5)
+                }
+            }
+            // Ini utk popup picker modalnya
+            .sheet(isPresented: $showDatePicker) {
+                datePickerModal
             }
 
             Picker("Filter", selection: $selectedSegment) {
@@ -123,15 +157,49 @@ struct TransactionListFlow: View {
                 selectedItems.removeAll()
             }
         }
-        .padding(.top, 50)
-        .padding(.bottom, 25)
+        .padding(.top, 55)
+        .padding(.bottom, 32)
         .background(Color.themeYellow)
-        .clipShape(RoundedCorner(radius: 40, corners: [.bottomLeft, .bottomRight]))
+        .clipShape(RoundedCorner(radius: 55, corners: [.bottomLeft, .bottomRight]))
         .ignoresSafeArea(edges: .top)
+    }
+    
+    private var datePickerModal: some View {
+        NavigationView {
+            VStack {
+                HStack(spacing: 0) {
+                    Picker("Month", selection: $selectedMonth) {
+                        ForEach(months, id: \.self) { month in
+                            Text(month).tag(month)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    
+                    Picker("Year", selection: $selectedYear) {
+                        ForEach(years, id: \.self) { year in
+                            Text(String(year)).tag(year)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                }
+                .padding(.horizontal)
+            }
+            .navigationTitle("Select Month and Date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        showDatePicker = false
+                    }
+                    .foregroundColor(.blue)
+                }
+            }
+        }
+        .presentationDetents([.height(300)])
     }
 
     private func dailyGroupView(group: (dateKey: String, items: [Transaction])) -> some View {
-        let isExpanded = expandedSections.isEmpty || expandedSections.contains(group.dateKey)
+        let isExpanded = expandedSections.contains(group.dateKey)
 
         return VStack(spacing: 0) {
             HStack {
@@ -395,6 +463,21 @@ struct TransactionListFlow: View {
             expandedSections.insert(key)
         }
     }
+    
+    private func changeMonth(by amount: Int) {
+        if let currentIndex = months.firstIndex(of: selectedMonth) { var newIndex = currentIndex + amount
+            
+            if newIndex > 11 {
+                newIndex = 0
+                selectedYear += 1
+            } else if newIndex < 0 {
+                newIndex = 11
+                selectedYear -= 1
+            }
+            
+            selectedMonth = months[newIndex]
+        }
+    }
 
     private func deleteAction() {
         let itemsToDelete = transactions.filter { selectedItems.contains($0.id) }
@@ -412,7 +495,10 @@ struct TransactionListFlow: View {
 }
 
 extension Color {
-    static let themeYellow = Color(red: 1.0, green: 0.98, blue: 0.88)
-    static let themePurple = Color(red: 0.92, green: 0.85, blue: 0.98)
-    static let themeGray = Color(red: 0.95, green: 0.95, blue: 0.95)
+    static let themeYellow = Color(pastelyellow)
+    static let themePurple = Color(pastellilac)
+}
+
+#Preview {
+    TransactionListFlow()
 }
