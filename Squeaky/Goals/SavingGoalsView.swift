@@ -5,131 +5,146 @@
 //  Created by ahmadfarhanqf on 06/04/26.
 //
 
-
 import SwiftUI
+import SwiftData
 
 struct SavingGoalsView: View {
     
+    // MARK: - Environment
+    @Environment(\.modelContext) private var context
+    
+    // MARK: - Data
+    @Query(sort: \SavingGoal.targetDate) private var goals: [SavingGoal]
+    
+    // MARK: - State
+    @State private var showEnterGoals: Bool = false
+    
+    // MARK: - Body
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background
-                Color.white.ignoresSafeArea()
+                backgroundLayer
                 
                 VStack(spacing: 0) {
                     headerSection
-                    
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Saving Goals")
-                            .font(.system(size: 32, weight: .bold))
-                            .padding(.horizontal)
-                            .padding(.top, 30)
-                        
-                        ScrollView {
-                            VStack(spacing: 16) {
-                                GoalRowView(title: "Buy BMW", progress: 0.5)
-                                GoalRowView(title: "Buy BMW", progress: 0.3)
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
-                    
+                    contentSection
                     Spacer()
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
-            
-            // toolbar
-            .toolbar {
-                
-                // LEFT (Back)
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        // isi kalau ada navigation sebelumnya
-                    }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
-                    }
-                }
-                
-                // RIGHT (Add Goals → PUSH)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: GoalProgressView()) {
-                        Text("Add Goals")
-                            .fontWeight(.bold)
-                    }
-                }
+            .toolbar { toolbarContent }
+            .sheet(isPresented: $showEnterGoals) {
+                EnterGoalView()
             }
-            
-            // Optional styling
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color.white, for: .navigationBar)
-        }
-    }
-    
-    // MARK: - Header Section
-    private var headerSection: some View {
-        ZStack {
-            UnevenRoundedRectangle(bottomLeadingRadius: 150, bottomTrailingRadius: 150)
-                .fill(Color(red: 0.95, green: 0.88, blue: 1.0))
-                .frame(height: 400)
-                .ignoresSafeArea()
-            
-            VStack {
-                Spacer()
-                
-                // Ring Chart / Info
-                ZStack {
-                    VStack {
-                        Text("Total Saving")
-                            .font(.headline)
-                            .foregroundColor(.black)
-                        Text("Rp 101.000.000")
-                            .font(.title3)
-                            .bold()
-                            .foregroundColor(.black)
-                    }
-                }
-                .padding(.top, 10)
-                
-                Spacer()
+            .onAppear {
+                BudgetSeedData.seedBudgetIfNeeded(context: context)
+                SavingGoalSeedData.seedSavingGoalsIfNeeded(context: context)
             }
         }
     }
 }
 
-// MARK: - Goal Row
-struct GoalRowView: View {
-    var title: String
-    var progress: CGFloat
+// MARK: - Background
+private extension SavingGoalsView {
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(title)
-                    .font(.headline)
-                Spacer()
-                Image(systemName: "pencil.line")
-            }
+    var backgroundLayer: some View {
+        Color.white.ignoresSafeArea()
+    }
+}
+
+// MARK: - Header Section
+private extension SavingGoalsView {
+    
+    var headerSection: some View {
+        ZStack {
+            headerBackground
             
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.purple.opacity(0.3))
-                        .frame(height: 12)
+            VStack {
+                headerContent
+                Spacer()
+            }
+        }
+    }
+    
+    var headerBackground: some View {
+        UnevenRoundedRectangle(
+            bottomLeadingRadius: 150,
+            bottomTrailingRadius: 150
+        )
+        .fill(Color(red: 0.95, green: 0.88, blue: 1.0))
+        .frame(height: 400)
+        .ignoresSafeArea()
+    }
+    
+    var headerContent: some View {
+        VStack(spacing: 16) {
+            Text("Total Saving")
+                .font(.headline)
+                .foregroundColor(.black)
+            
+            Text(SavingGoalService.totalSaving(goals: goals))
+                .font(.title3)
+                .bold()
+                .foregroundColor(.black)
+
+            Text("\(SavingGoalService.totalSaving(goals: goals)) / \(SavingGoalService.totalTarget(goals: goals))")
+                .font(.subheadline)
+                .foregroundColor(.black.opacity(0.7))
+
+            DonutChart(progress: SavingGoalService.totalProgress(goals: goals), lineWidth: 18, size: 170)
+        }
+        .padding(.top, 110)
+    }
+}
+
+// MARK: - Content Section
+private extension SavingGoalsView {
+    
+    var contentSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            
+            Text("Saving Goals")
+                .font(.system(size: 32, weight: .bold))
+                .padding(.horizontal)
+                .padding(.top, 10)
+            
+            ScrollView {
+                VStack(spacing: 16) {
                     
-                    Capsule()
-                        .fill(Color.white)
-                        .frame(width: geo.size.width * progress, height: 12)
+                    
+                    ForEach(goals) { goal in
+                        GoalRow(goal: goal)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+}
+
+// MARK: - Toolbar
+private extension SavingGoalsView {
+    
+    var toolbarContent: some ToolbarContent {
+        Group {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {}) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
                 }
             }
-            .frame(height: 12)
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showEnterGoals = true
+                } label: {
+                    Text("Add Goals")
+                        .fontWeight(.bold)
+                }
+            }
         }
-        .padding(20)
-        .background(Color(red: 0.95, green: 0.88, blue: 1.0))
-        .cornerRadius(16)
     }
 }
 

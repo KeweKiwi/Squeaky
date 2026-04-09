@@ -6,10 +6,21 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AddProgressView: View {
+    let goal: SavingGoal
     @State private var amount: String = ""
+    @State private var showBudgetAlert = false
+    
     @Environment(\.dismiss) var dismiss // To close the modal
+    @Environment(\.modelContext) private var context
+    
+    @Query private var budgets: [MonthlyBudget]
+
+    private var availableBudget: Double {
+        BudgetService.currentBudget(from: budgets)?.budgetAmount ?? 0
+    }
 
     var body: some View {
         ZStack {
@@ -39,17 +50,25 @@ struct AddProgressView: View {
                 .padding(.horizontal, 24)
                 
                 // Titles
-                VStack(spacing: 8) {
-                    Text("Add Progress")
-                        .font(.system(size: 32, weight: .bold))
-                    
-                    VStack(spacing: 4) {
-                        Text("Your Balance")
-                            .font(.title3)
-                        Text("Rp xx.xxx.xxx")
-                            .font(.title3)
+                    VStack(spacing: 8) {
+                        Text("Add Progress")
+                            .font(.system(size: 32, weight: .bold))
+
+                        Text(goal.title)
+                            .font(.title2)
                             .fontWeight(.semibold)
-                    }
+                    
+                        VStack(spacing: 4) {
+                            Text("Current Progress")
+                                .font(.title3)
+                            Text(SavingGoalService.progressSummary(for: goal))
+                                .font(.title3)
+                                .fontWeight(.semibold)
+
+                            Text("Budget Available: \(SavingGoalService.formatCurrency(availableBudget))")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
                 }
                 .padding(.vertical, 20)
                 
@@ -75,8 +94,36 @@ struct AddProgressView: View {
                     
                     // Add Button
                     Button(action: {
-                        // Add logic here
                         
+                        guard let amountDecimal = Double(amount),
+                              amountDecimal > 0 else { return }
+
+                        let success = BudgetService.addProgress(
+                            amount: amountDecimal,
+                            context: context,
+                            budgets: budgets
+                        )
+
+                        guard success else {
+                            showBudgetAlert = true
+                            return
+                        }
+
+                        do {
+                            try SavingGoalService.addProgress(
+                                to: goal,
+                                amount: amountDecimal,
+                                context: context
+                            )
+                        } catch {
+                            print("Failed to add goal progress:", error)
+                            BudgetService.refundProgress(
+                                amount: amountDecimal,
+                                context: context,
+                                budgets: budgets
+                            )
+                            return
+                        }
                         
                         dismiss()
                     }) {
@@ -101,9 +148,22 @@ struct AddProgressView: View {
                 .ignoresSafeArea(edges: .bottom)
             }
         }
+        .onAppear {
+            BudgetSeedData.seedBudgetIfNeeded(context: context)
+        }
+        .alert("Budget Not Enough", isPresented: $showBudgetAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Available budget is \(SavingGoalService.formatCurrency(availableBudget)).")
+        }
     }
 }
 
 #Preview {
-    AddProgressView()
+    AddProgressView(
+        goal: SavingGoal(
+            title: "Buy BMW",
+            targetAmount: 100_000_000
+        )
+    )
 }

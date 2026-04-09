@@ -11,17 +11,17 @@ import SwiftData
 enum BudgetSeedData {
     static func seedBudgetIfNeeded(context: ModelContext) {
         let descriptor = FetchDescriptor<MonthlyBudget>()
-
         guard let existingBudgets = try? context.fetch(descriptor),
               existingBudgets.isEmpty else { return }
 
+        
         let currentMonth = Calendar.current.component(.month, from: .now)
         let currentYear = Calendar.current.component(.year, from: .now)
 
         let budget = MonthlyBudget(
             month: currentMonth,
             year: currentYear,
-            budgetAmount: 2000000
+            budgetAmount: 400000
         )
 
         context.insert(budget)
