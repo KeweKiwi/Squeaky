@@ -17,7 +17,9 @@ enum SharedModelContainer {
         Transaction.self,
         MonthlyBudget.self,
         SavingGoal.self,
-        UserStats.self
+        UserStats.self,
+        Challenge.self,
+        Pet.self
     ])
 
     static let container: ModelContainer = {

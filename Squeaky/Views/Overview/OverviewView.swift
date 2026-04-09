@@ -179,41 +179,45 @@ struct OverviewView: View {
                     )
                     .scaleEffect(x: 1, y: 3, anchor: .center)
                     .tint(.orange)
+
                     Text("\(currency(currentMonthExpense)) / \(currency(currentMonthBudget))")
                         .font(.headline)
                 }
 
+                
                 HStack(spacing: 16) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.gray.opacity(0.1))
+                    NavigationLink(destination: PetView()){
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.1))
 
-                        VStack {
-                            Text("Squeaky level:")
-                                .font(.footnote)
-                                .bold()
-                                .padding(.horizontal, 16)
-                                .padding(.top, 1)
+                            VStack {
+                                Text("Squeaky level:")
+                                    .font(.footnote)
+                                    .bold()
+                                    .padding(.horizontal, 16)
+                                    .padding(.top, 1)
 
-                            ZStack {
-                                Image("Meter")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(height: 80)
-                                    .padding(.top, 55)
+                                ZStack {
+                                    Image("Meter")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 80)
+                                        .padding(.top, 55)
 
-                                Image("Needle")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(height: 60)
-                                    .rotationEffect(.degrees(-90 + (spentRatio * 180)), anchor: .bottom)
-                                    .offset(y: 40)
+                                    Image("Needle")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 60)
+                                        .rotationEffect(.degrees(-90 + (spentRatio * 180)), anchor: .bottom)
+                                        .offset(y: 40)
 
-                                Image("Pet lvl 1")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(height: 90)
-                                    .offset(y: -20)
+                                    Image("Pet lvl 1")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 90)
+                                        .offset(y: -20)
+                                }
                             }
                         }
                     }
