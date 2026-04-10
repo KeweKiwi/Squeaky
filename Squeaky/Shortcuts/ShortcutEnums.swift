@@ -1,5 +1,9 @@
 import AppIntents
 
+
+// fungsi app enum itu biar bisa dipakai di shortcuts, siri dll yg berhubungan dengan app intent
+// case iterable itu untuk menampilkan semua case yang dia punya (cth: ShortcutTransactionType.allCases)
+
 enum ShortcutTransactionType: String, AppEnum, CaseIterable {
     case income
     case expense

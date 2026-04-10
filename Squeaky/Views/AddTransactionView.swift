@@ -1,14 +1,31 @@
+//
+//  AddTransactionView.swift
+//  Squeaky
+//
+//  Created by Kevin William Faith on 05/04/26.
+//
+
+
 import SwiftUI
 import SwiftData
 
 struct AddTransactionView: View {
+    // ini buat nutup sheet add transaction
     @Environment(\.dismiss) private var dismiss
+
+    // ini pintu akses ke swiftdata
+    // dipakai buat insert dan save transaction baru
     @Environment(\.modelContext) private var modelContext
 
+    // ini ambil semua category dari database
+    // sudah otomatis diurutkan berdasarkan nama karena pakai sort: \Category.name
     @Query(sort: \Category.name) private var categories: [Category]
 
+    // ini dipakai buat ngatur field mana yang lagi aktif
     @FocusState private var focusedField: Field?
 
+    // state form sementara
+    // data user disimpan dulu di sini sebelum akhirnya disave ke database
     @State private var selectedType: TransactionType = .expense
     @State private var selectedCategoryName: String = ""
     @State private var note: String = ""
@@ -16,50 +33,40 @@ struct AddTransactionView: View {
     @State private var selectedDate: Date = .now
     @State private var showDatePickerSheet = false
 
+    // enum kecil buat nandain focus textfield
     enum Field {
         case note
         case amount
     }
 
-    private let expenseCategoryOrder = [
-        "Education", "Food", "Transport", "Gift",
-        "Beauty", "Clothes", "Social", "Medical",
-        "Debt", "Entertainment", "Daily", "Other"
-    ]
-
-    private let incomeCategoryOrder = [
-        "Salary", "Allowance", "Bonus", "Freelance", "Other"
-    ]
-
+    // ini nyaring category sesuai type
+    // karena categories dari @Query sudah urut abjad, di sini cukup filter aja
     private var filteredCategories: [Category] {
         let targetType: CategoryType = selectedType == .expense ? .expense : .income
-        let base = categories.filter { $0.type == targetType }
-        let order = selectedType == .expense ? expenseCategoryOrder : incomeCategoryOrder
-
-        return base.sorted { first, second in
-            let firstIndex = order.firstIndex(of: first.name) ?? Int.max
-            let secondIndex = order.firstIndex(of: second.name) ?? Int.max
-            return firstIndex < secondIndex
-        }
+        return categories.filter { $0.type == targetType }
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            // background utama layar
             Color(.systemGray6)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer(minLength: 16)
 
+                // segmented control native ios
                 segmentedTypeSwitcher
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
 
+                // area category bisa discroll
                 ScrollView {
                     VStack(spacing: 20) {
                         categoryGrid
                             .padding(.top, 24)
 
+                        // spacer ini biar grid gak ketiban panel bawah
                         Spacer(minLength: 260)
                     }
                     .padding(.horizontal, 24)
@@ -67,15 +74,20 @@ struct AddTransactionView: View {
                 }
             }
 
+            // panel bawah buat input utama
             inputPanel
         }
         .onAppear {
+            // pas pertama buka, pilih category pertama yang valid
             syncDefaultCategory()
+
+            // langsung fokus ke note biar user bisa langsung ngetik
             focusedField = .note
         }
         .sheet(isPresented: $showDatePickerSheet) {
             NavigationStack {
                 VStack {
+                    // datepicker native apple
                     DatePicker(
                         "Select Date",
                         selection: $selectedDate,
@@ -100,44 +112,32 @@ struct AddTransactionView: View {
         }
     }
 
+    // segmented control buat pilih expense / income
     private var segmentedTypeSwitcher: some View {
-        HStack(spacing: 0) {
-            segmentButton(title: "Expense", type: .expense)
-            segmentButton(title: "Income", type: .income)
+        Picker("Type", selection: $selectedType) {
+            Text("Expense").tag(TransactionType.expense)
+            Text("Income").tag(TransactionType.income)
         }
-        .padding(4)
-        .background(Color.gray.opacity(0.15))
-        .clipShape(Capsule())
-    }
-
-    private func segmentButton(title: String, type: TransactionType) -> some View {
-        let isSelected = selectedType == type
-
-        return Button {
-            selectedType = type
+        .pickerStyle(.segmented)
+        .onChange(of: selectedType) { _, _ in
+            // kalau type berubah, category default ikut disesuaikan
             syncDefaultCategory()
-        } label: {
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(isSelected ? .white : .gray)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(isSelected ? Color.black : Color.clear)
-                .clipShape(Capsule())
         }
     }
 
+    // grid category
     private var categoryGrid: some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 18), count: 4)
 
         return LazyVGrid(columns: columns, spacing: 26) {
             ForEach(filteredCategories, id: \.id) { category in
                 Button {
+                    // simpan nama category yang dipilih user
                     selectedCategoryName = category.name
                 } label: {
                     VStack(spacing: 8) {
                         ZStack {
+                            // kasih highlight kalau category sedang dipilih
                             Circle()
                                 .fill(selectedCategoryName == category.name ? Color.black.opacity(0.08) : Color.clear)
                                 .frame(width: 60, height: 60)
@@ -159,9 +159,11 @@ struct AddTransactionView: View {
         }
     }
 
+    // panel bawah buat note, amount, date, dan tombol save
     private var inputPanel: some View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
+                // field note
                 TextField("note", text: $note)
                     .focused($focusedField, equals: .note)
                     .font(.subheadline)
@@ -170,6 +172,8 @@ struct AddTransactionView: View {
                     .background(Color.white.opacity(0.9))
                     .clipShape(Capsule())
 
+                // field amount
+                // disimpan sebagai string dulu biar gampang dibersihin
                 TextField("Rp.", text: $amountText)
                     .focused($focusedField, equals: .amount)
                     .keyboardType(.numberPad)
@@ -182,6 +186,7 @@ struct AddTransactionView: View {
             }
 
             HStack(spacing: 12) {
+                // tombol tanggal
                 Button {
                     showDatePickerSheet = true
                 } label: {
@@ -195,6 +200,7 @@ struct AddTransactionView: View {
                         .clipShape(Capsule())
                 }
 
+                // tombol save cepat
                 Button {
                     saveTransaction()
                 } label: {
@@ -221,6 +227,9 @@ struct AddTransactionView: View {
         .padding(.bottom, 8)
     }
 
+    // label tanggal
+    // kalau hari ini ya tampil "Today"
+    // kalau bukan, tampilkan format tanggal singkat
     private var todayLabel: String {
         if Calendar.current.isDateInToday(selectedDate) {
             return "Today"
@@ -231,12 +240,15 @@ struct AddTransactionView: View {
         }
     }
 
+    // validasi sederhana biar tombol save cuma aktif kalau input masuk akal
     private var canSave: Bool {
         !selectedCategoryName.isEmpty &&
         !amountText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         Decimal(string: cleanedAmount) != nil
     }
 
+    // bersihin amount text
+    // misalnya titik dan koma dihapus dulu sebelum diubah ke decimal
     private var cleanedAmount: String {
         amountText
             .replacingOccurrences(of: ".", with: "")
@@ -244,6 +256,7 @@ struct AddTransactionView: View {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    // pilih category default pertama sesuai type yang sedang aktif
     private func syncDefaultCategory() {
         if let first = filteredCategories.first {
             selectedCategoryName = first.name
@@ -252,12 +265,14 @@ struct AddTransactionView: View {
         }
     }
 
+    // function utama buat bikin transaction baru lalu simpan ke swiftdata
     private func saveTransaction() {
         guard let amount = Decimal(string: cleanedAmount), amount > 0 else { return }
 
         let selectedCategory = filteredCategories.first { $0.name == selectedCategoryName }
 
         let transaction = Transaction(
+            // kalau note kosong, title pakai nama category
             title: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? selectedCategoryName : note,
             amount: amount,
             type: selectedType,
@@ -266,16 +281,21 @@ struct AddTransactionView: View {
             category: selectedCategory
         )
 
+        // masukin transaction ke context
         modelContext.insert(transaction)
 
         do {
+            // simpan permanen ke database
             try modelContext.save()
+
+            // kalau berhasil, tutup sheet
             dismiss()
         } catch {
             print("Failed to save transaction: \(error)")
         }
     }
 
+    // helper emoji buat category
     private func categoryEmoji(for name: String) -> String {
         switch name.lowercased() {
         case "education": return "📚"
