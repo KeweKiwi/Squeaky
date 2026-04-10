@@ -15,19 +15,24 @@ enum SeedData {
         guard let existing = try? context.fetch(descriptor), existing.isEmpty else { return }
 
         let categories: [(String, CategoryType)] = [
+            ("Education", .expense),
             ("Food", .expense),
-            ("Clothing", .expense),
             ("Transport", .expense),
-            ("Beauty", .expense),
-            ("Entertainment", .expense),
             ("Gift", .expense),
+            ("Beauty", .expense),
+            ("Clothing", .expense),
+            ("Social", .expense),
             ("Medical", .expense),
             ("Debt", .expense),
+            ("Entertainment", .expense),
             ("Daily", .expense),
+            ("Other", .expense),
+
             ("Salary", .income),
             ("Allowance", .income),
             ("Bonus", .income),
-            ("Other", .expense)
+            ("Freelance", .income),
+            ("Other", .income)
         ]
 
         for item in categories {

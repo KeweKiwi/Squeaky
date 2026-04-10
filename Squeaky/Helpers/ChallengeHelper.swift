@@ -35,18 +35,30 @@ enum ChallengeHelper {
     
     static func evaluate(
         definition: ChallengeDefinition,
-        transactions: [Transaction]
+        transactions: [Transaction],
+        lastResetDate: Date
     ) -> Bool {
-        
         switch definition.type {
         case .maxSpending:
-            return evaluateMaxSpending(definition, transactions)
+            return evaluateMaxSpending(
+                definition,
+                transactions,
+                lastResetDate: lastResetDate
+            )
             
         case .consecutiveSavingDays:
-            return evaluateStreak(definition, transactions)
+            return evaluateStreak(
+                definition,
+                transactions,
+                lastResetDate: lastResetDate
+            )
 
         case .transactionCount:
-            return evaluateTransactionCount(definition, transactions)
+            return evaluateTransactionCount(
+                definition,
+                transactions,
+                lastResetDate: lastResetDate
+            )
             
         default:
             return false
@@ -57,21 +69,24 @@ enum ChallengeHelper {
     
     private static func evaluateMaxSpending(
         _ def: ChallengeDefinition,
-        _ transactions: [Transaction]
+        _ transactions: [Transaction],
+        lastResetDate: Date
     ) -> Bool {
-        
         guard let limit = def.limitAmount,
               let category = def.category else { return false }
         
-        let today = Date()
-        
-        let total = transactions
+        let relevantTransactions = transactions
             .filter {
                 $0.type == .expense &&
                 $0.category?.name == category &&
-                Calendar.current.isDate($0.date, inSameDayAs: today)
+                $0.date >= lastResetDate
             }
-            .reduce(Decimal(0)) { $0 + $1.amount }
+
+        guard !relevantTransactions.isEmpty else {
+            return false
+        }
+
+        let total = relevantTransactions.reduce(Decimal(0)) { $0 + $1.amount }
         
         return total <= limit
     }
@@ -80,14 +95,14 @@ enum ChallengeHelper {
     
     private static func evaluateStreak(
         _ def: ChallengeDefinition,
-        _ transactions: [Transaction]
+        _ transactions: [Transaction],
+        lastResetDate: Date
     ) -> Bool {
-        
         guard let days = def.durationDays else { return false }
         
         let calendar = Calendar.current
         
-        let grouped = Dictionary(grouping: transactions) {
+        let grouped = Dictionary(grouping: transactions.filter { $0.date >= lastResetDate }) {
             calendar.startOfDay(for: $0.date)
         }
         
@@ -111,13 +126,13 @@ enum ChallengeHelper {
 
     private static func evaluateTransactionCount(
         _ def: ChallengeDefinition,
-        _ transactions: [Transaction]
+        _ transactions: [Transaction],
+        lastResetDate: Date
     ) -> Bool {
         guard let targetCount = def.targetCount else { return false }
 
-        let today = Date()
         let count = transactions.filter {
-            Calendar.current.isDate($0.date, inSameDayAs: today)
+            $0.date >= lastResetDate
         }.count
 
         return count >= targetCount
