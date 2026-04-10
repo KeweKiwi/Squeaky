@@ -7,7 +7,26 @@
 
 import SwiftData
 
+/*
+ kenapa pakai enum SharedModelContainer?
+
+ karena file ini dipakai sebagai namespace saja.
+
+ artinya:
+ - kamu gak perlu bikin object SharedModelContainer()
+ - cukup akses langsung: SharedModelContainer.container
+ 
+ */
+
 enum SharedModelContainer {
+    
+    /*
+     artinya:
+     - app utama
+     - shortcut / app intent
+
+     bisa akses tempat penyimpanan data yang sama.
+     */
     static let appGroupID = "group.com.kevinfaith.squeaky"
 
     
