@@ -13,6 +13,8 @@ struct OverviewView: View {
     
     @State private var isCensored: Bool = false
     
+    @State private var showBigChart: Bool = false
+    
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
     
@@ -105,23 +107,23 @@ struct OverviewView: View {
             VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 20) {
                     HStack {
-                        Text("What’s your money up to?")
-                            .font(.system(size: 32))
+                        Text("Welcome back!")
+                            .font(.system(size: 35))
                             .bold()
                         
                         Spacer()
                         
                         NavigationLink(destination: MonthlyRecapView()) {
-                            Image("Fitur")
+                            Image("monthly recap_1")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 40, height: 50)
+                                .frame(width: 40, height: 65)
                         }
                     }
                     
                     HStack {
                         Text("Overview")
-                            .font(.title2)
+                            .font(.title)
                             .bold()
                         
                         Spacer()
@@ -224,7 +226,10 @@ struct OverviewView: View {
                     .frame(maxWidth: .infinity)
                     .aspectRatio(1, contentMode: .fit)
                     
-                    NavigationLink(destination: Text("Bigger Pie Chart")) {
+                    Button(action: {
+                        showBigChart = true
+                    }) {
+                        
                         ZStack {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.white)
@@ -264,7 +269,7 @@ struct OverviewView: View {
                         Spacer()
                         
                         NavigationLink(destination: Text("Add Saving Goal Page")) {
-                            Image(systemName: "plus")
+                            Image(systemName: "chevron.right")
                                 .font(.headline)
                                 .foregroundColor(.black)
                                 .padding(10)
@@ -302,6 +307,44 @@ struct OverviewView: View {
             }
             .padding(20)
         }
+        .sheet(isPresented: $showBigChart) {
+                    
+                    NavigationStack {
+                        VStack {
+                            if chartData.isEmpty {
+                                Text("No expense data")
+                                    .foregroundColor(.gray)
+                            } else {
+                                Charts.Chart(chartData) { expense in
+                                    SectorMark(
+                                        angle: .value("Spent", expense.amount),
+                                        innerRadius: .ratio(0.0),
+                                        angularInset: 0.5
+                                    )
+                                    .foregroundStyle(expense.color)
+                                    .annotation(position: .overlay) {
+                                        Text(expense.icon)
+                                            .font(.system(size: 45)) // Massive emojis!
+                                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 2)
+                                    }
+                                }
+                                .padding(40)
+                            }
+                        }
+                        .navigationTitle("Expense Breakdown")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done") {
+                                    showBigChart = false
+                                }
+                                .bold()
+                            }
+                        }
+                    }
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                }
     }
     
     private func summaryCard(icon: String, title: String, value: String) -> some View {

@@ -24,9 +24,11 @@ struct MonthlyRecapView: View {
                     Button(action:{
                         dismiss()
                     }){
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.largeTitle)
-                            .accentColor(.white)
+                        Text("Done ")
+                            .buttonStyle(.bordered)
+                            .padding(11)
+                            .background(Color.white.opacity(0.8))
+                            .cornerRadius(30)
                             .animation(.easeInOut(duration: 0.3), value: currentIndex)
                     }
                 }
