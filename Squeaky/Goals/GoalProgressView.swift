@@ -9,33 +9,37 @@ import SwiftUI
 
 struct GoalProgressView: View {
     let goal: SavingGoal
-    
+
     @State private var showingEditModal = false
     @State private var showingAddModal = false
-    
+
     @Environment(\.dismiss) var dismiss
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            
+
             // MARK: - Header Section
             ZStack {
-                UnevenRoundedRectangle(bottomLeadingRadius: 150, bottomTrailingRadius: 150)
-                    .fill(Color(red: 0.92, green: 0.85, blue: 0.98))
-                    .frame(height: 340)
+                Circle()
+                    .fill(Color(red: 0.95, green: 0.88, blue: 1.0))
+                    .frame(width: 590, height: 590)
+                    .offset(y: -200)
                     .ignoresSafeArea()
+                VStack(spacing: 10) {
+                    Text("Your goal")
+                        .font(.system(size: 34, weight: .bold))
+                    Text(goal.title)
+                        .font(.system(size: 25))
+                }
                 
+                .padding(.bottom, 100)
                 VStack {
                     Spacer()
+
                     
-                    VStack(spacing: 8) {
-                        Text(goal.title)
-                            .font(.system(size: 34, weight: .bold))
-                    }
-                    .padding(.bottom, 150)
                 }
             }
-            .frame(height: 340)
+            .frame(height: 300)
 
             // MARK: - Progress Content
             VStack(spacing: 30) {
@@ -44,10 +48,14 @@ struct GoalProgressView: View {
                     .foregroundColor(.black.opacity(0.8))
                     .padding(.top, 40)
 
-                Chart(progress: SavingGoalService.progress(for: goal), height: 24)
-                    .frame(height: 24)
-                    .padding(.horizontal, 40)
+                Chart(
+                    progress: SavingGoalService.progress(for: goal),
+                    height: 35
+                )
                 
+                .frame(height: 24)
+                .padding(.horizontal, 130)
+
                 Button(action: {
                     showingAddModal = true
                 }) {
@@ -57,16 +65,20 @@ struct GoalProgressView: View {
                         .frame(width: 220, height: 54)
                         .background(Color(red: 0.65, green: 0.52, blue: 0.78))
                         .clipShape(Capsule())
-                        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+                        .shadow(
+                            color: Color.black.opacity(0.15),
+                            radius: 10,
+                            x: 0,
+                            y: 5
+                        )
                 }
                 .padding(.top, 20)
             }
-            
             Spacer()
         }
         .background(Color.white)
         .navigationBarTitleDisplayMode(.inline)
-        
+
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
@@ -77,21 +89,33 @@ struct GoalProgressView: View {
                 }
             }
         }
-        
+
         // Optional styling
         .toolbarBackground(.visible, for: .navigationBar)
-        
+
         // MARK: - Sheets
         .sheet(isPresented: $showingEditModal) {
             EditGoalView(goal: goal) {
                 dismiss()
             }
-                .presentationDetents([.large])
+            .presentationDetents([.large])
         }
         .sheet(isPresented: $showingAddModal) {
             AddProgressView(goal: goal)
                 .presentationDetents([.large])
         }
+    }
+}
+
+extension SavingGoalsView {
+
+    fileprivate var headerBackground: some View {
+        Circle()
+            .fill(Color(red: 0.95, green: 0.88, blue: 1.0))
+            .frame(width: 590, height: 590)
+            .offset(y: -200)
+            .ignoresSafeArea()
+
     }
 }
 
