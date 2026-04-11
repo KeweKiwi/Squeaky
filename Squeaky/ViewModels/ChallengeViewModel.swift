@@ -44,7 +44,8 @@ class ChallengeViewModel: ObservableObject {
             // ⚙️ Evaluate
             challenge.isCompleted = ChallengeHelper.evaluate(
                 definition: def,
-                transactions: transactions
+                transactions: transactions,
+                lastResetDate: challenge.lastResetDate
             )
         }
         
