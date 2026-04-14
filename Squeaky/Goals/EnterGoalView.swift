@@ -68,7 +68,7 @@ struct GoalFormContainerView<Actions: View>: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.92, green: 0.85, blue: 0.98)
+            Color(.lemon.opacity(0.25))
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {

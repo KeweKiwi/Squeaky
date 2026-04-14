@@ -19,7 +19,7 @@ struct SavingGoalsView: View {
         NavigationStack {
             ZStack(alignment: .top) {
                 Circle()
-                    .fill(Color(red: 0.95, green: 0.88, blue: 1.0))
+                    .fill(Color.color4)
                     .frame(width: 590, height: 790)
                     .offset(y: -200)
                     .ignoresSafeArea()

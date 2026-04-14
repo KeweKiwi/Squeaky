@@ -15,14 +15,15 @@ struct Chart: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.purple.opacity(0.18))
+                    .fill(Color.black.opacity(0.1))
 
                 Capsule()
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(red: 0.77, green: 0.63, blue: 0.92),
+                                Color(.lilac),
                                 Color(red: 0.56, green: 0.38, blue: 0.77)
+                                
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
@@ -44,14 +45,14 @@ struct DonutChart: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.purple.opacity(0.18), lineWidth: lineWidth)
+                .stroke(Color.white.opacity(1), lineWidth: lineWidth)
 
             Circle()
                 .trim(from: 0, to: max(0.02, progress))
                 .stroke(
                     LinearGradient(
                         colors: [
-                            Color(red: 0.77, green: 0.63, blue: 0.92),
+                            Color(.lemon),
                             Color(red: 0.56, green: 0.38, blue: 0.77)
                         ],
                         startPoint: .topLeading,

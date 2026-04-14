@@ -596,8 +596,8 @@ struct TransactionListFlow: View {
 }
 
 extension Color {
-    static let themeYellow = Color(pastelyellow)
-    static let themePurple = Color(pastellilac)
+    static let themeYellow = Color(lemon.opacity(0.8))
+    static let themePurple = Color(color4)
 }
 
 #Preview {

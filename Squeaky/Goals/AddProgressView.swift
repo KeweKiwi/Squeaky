@@ -25,7 +25,7 @@ struct AddProgressView: View {
     var body: some View {
         ZStack {
             // Background Purple Header Area
-            Color(red: 0.92, green: 0.85, blue: 0.98)
+            Color(.lemon.opacity(0.25))
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -132,7 +132,7 @@ struct AddProgressView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
-                            .background(Color(red: 0.65, green: 0.52, blue: 0.78))
+                            .background(Color.darkpurple)
                             .clipShape(Capsule())
                             .shadow(color: Color.black.opacity(0.2), radius: 8, y: 4)
                     }
