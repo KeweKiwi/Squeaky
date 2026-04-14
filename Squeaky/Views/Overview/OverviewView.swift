@@ -14,6 +14,7 @@ struct OverviewView: View {
     @State private var isCensored: Bool = false
     
     @State private var showBigChart: Bool = false
+    @State private var selectedExpenseCategory: ExpenseCategory?
     
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
@@ -73,6 +74,7 @@ struct OverviewView: View {
         return min(spent / budget, 1.0)
     }
     
+    // MARK: -Pie Chart
     private var chartData: [ExpenseCategory] {
         let grouped = Dictionary(grouping: currentMonthTransactions.filter { $0.type == .expense }) {
             $0.category?.name ?? "Other"
@@ -103,8 +105,9 @@ struct OverviewView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        ZStack {
+            ScrollView {
+                VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 20) {
                     HStack {
                         Text("Welcome back!")
@@ -226,38 +229,15 @@ struct OverviewView: View {
                     .frame(maxWidth: .infinity)
                     .aspectRatio(1, contentMode: .fit)
                     
-                    Button(action: {
-                        showBigChart = true
-                    }) {
-                        
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.3), radius: 5, x: 0, y: 3)
-                            
-                            if chartData.isEmpty {
-                                Text("No expense data")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            } else {
-                                Charts.Chart(chartData) { expense in
-                                    SectorMark(
-                                        angle: .value("Spent", expense.amount),
-                                        innerRadius: .ratio(0.0),
-                                        angularInset: 0.5
-                                    )
-                                    .foregroundStyle(expense.color)
-                                    .annotation(position: .overlay) {
-                                        Text(expense.icon)
-                                            .font(.title2)
-                                    }
-                                }
-                                .padding(10)
+                    // MARK: -CHART EXPENSE DATA
+                    CategoryChart(
+                        chartData: chartData,
+                        onExpand: {
+                            withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
+                                showBigChart = true
                             }
                         }
-                        .frame(maxWidth: .infinity)
-                        .aspectRatio(1, contentMode: .fit)
-                    }
+                    )
                 }
                 
                 VStack(alignment: .leading, spacing: 10) {
@@ -268,13 +248,10 @@ struct OverviewView: View {
                         
                         Spacer()
                         
-                        NavigationLink(destination: Text("Add Saving Goal Page")) {
+                        NavigationLink(destination: SavingGoalsView()) {
                             Image(systemName: "chevron.right")
-                                .font(.headline)
-                                .foregroundColor(.black)
-                                .padding(10)
-                                .background(Color.white)
-                                .clipShape(Circle())
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.secondary)
                         }
                     }
                     
@@ -304,47 +281,33 @@ struct OverviewView: View {
                 .padding(20)
                 .background(Color.yellow)
                 .cornerRadius(16)
-            }
-            .padding(20)
-        }
-        .sheet(isPresented: $showBigChart) {
-                    
-                    NavigationStack {
-                        VStack {
-                            if chartData.isEmpty {
-                                Text("No expense data")
-                                    .foregroundColor(.gray)
-                            } else {
-                                Charts.Chart(chartData) { expense in
-                                    SectorMark(
-                                        angle: .value("Spent", expense.amount),
-                                        innerRadius: .ratio(0.0),
-                                        angularInset: 0.5
-                                    )
-                                    .foregroundStyle(expense.color)
-                                    .annotation(position: .overlay) {
-                                        Text(expense.icon)
-                                            .font(.system(size: 45)) // Massive emojis!
-                                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 2)
-                                    }
-                                }
-                                .padding(40)
-                            }
-                        }
-                        .navigationTitle("Expense Breakdown")
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button("Done") {
-                                    showBigChart = false
-                                }
-                                .bold()
-                            }
-                        }
-                    }
-                    .presentationDetents([.medium, .large])
-                    .presentationDragIndicator(.visible)
                 }
+                .padding(20)
+            }
+            .scrollDisabled(showBigChart)
+            
+            if showBigChart {
+                CategoryChart(
+                    chartData: chartData,
+                    isExpanded: true,
+                    onDismiss: {
+                        withAnimation(.spring(response: 0.28, dampingFraction: 0.9)) {
+                            showBigChart = false
+                        }
+                    },
+                    onCategorySelected: { category in
+                        withAnimation(.spring(response: 0.28, dampingFraction: 0.9)) {
+                            showBigChart = false
+                        }
+                        selectedExpenseCategory = category
+                    }
+                )
+                .zIndex(1)
+            }
+        }
+        .navigationDestination(item: $selectedExpenseCategory) { category in
+            CategoryTransaction(expenseCategory: category)
+        }
     }
     
     private func summaryCard(icon: String, title: String, value: String) -> some View {
@@ -411,12 +374,20 @@ struct OverviewView: View {
     }
 }
 
-struct ExpenseCategory: Identifiable {
-    let id = UUID()
+struct ExpenseCategory: Identifiable, Equatable, Hashable {
+    var id: String { name }
     let name: String
     let amount: Double
     let color: Color
     let icon: String
+
+    static func == (lhs: ExpenseCategory, rhs: ExpenseCategory) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 #Preview {
