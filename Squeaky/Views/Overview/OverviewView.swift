@@ -11,10 +11,18 @@ import Charts
 
 struct OverviewView: View {
     
+    @Environment(\.modelContext) private var modelContext
+    
     @State private var isCensored: Bool = false
     
     @State private var showBigChart: Bool = false
     @State private var selectedExpenseCategory: ExpenseCategory?
+    
+    @State private var showBudgetModal: Bool = false
+    
+    @FocusState private var isInputFocused: Bool
+    
+    @State private var newBudgetAmount: String = ""
     
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
@@ -81,9 +89,9 @@ struct OverviewView: View {
         }
         
         let palette: [Color] = [
-            .yellow, .teal, .orange, .pink, .purple, .blue, .green, .red, .indigo, .mint
+            .kuningpastel, .tangarine, .outfit, .color6, .color7, .color2, .color4, .color3, .blue, .darklilac, .darkpurple, .color1
         ]
-        
+        //
         let sorted = grouped
             .map { key, value in
                 ExpenseCategory(
@@ -169,7 +177,10 @@ struct OverviewView: View {
                         
                         Spacer()
                         
-                        NavigationLink(destination: Text("Edit Budget Page")) {
+                        Button(action: {
+                            newBudgetAmount = ""
+                            showBudgetModal = true
+                        }) {
                             Image(systemName: "square.and.pencil")
                                 .font(.headline)
                                 .foregroundColor(.black)
@@ -184,7 +195,7 @@ struct OverviewView: View {
                         total: max(NSDecimalNumber(decimal: currentMonthBudget).doubleValue, 1)
                     )
                     .scaleEffect(x: 1, y: 3, anchor: .center)
-                    .tint(.orange)
+                    .tint(.lilac)
                     
                     Text("\(currency(currentMonthExpense)) / \(currency(currentMonthBudget))")
                         .font(.headline)
@@ -194,11 +205,12 @@ struct OverviewView: View {
                     NavigationLink(destination: PetView()) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.gray.opacity(0.1))
+                                .fill(Color.kuningpastel.opacity(0.1))
                             
                             VStack {
                                 Text("Squeaky level:")
                                     .font(.footnote)
+                                    .foregroundColor(.charcoal)
                                     .bold()
                                     .padding(.horizontal, 16)
                                     .padding(.top, 1)
@@ -220,7 +232,7 @@ struct OverviewView: View {
                                     Image("Pet lvl 1")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(height: 90)
+                                        .frame(height: 140)
                                         .offset(y: -20)
                                 }
                             }
@@ -236,6 +248,7 @@ struct OverviewView: View {
                             withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
                                 showBigChart = true
                             }
+                            
                         }
                     )
                 }
@@ -250,8 +263,10 @@ struct OverviewView: View {
                         
                         NavigationLink(destination: SavingGoalsView()) {
                             Image(systemName: "chevron.right")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(.secondary)
+                                .font(.headline)
+                                .foregroundColor(.black)
+                                .padding(10)
+                                .clipShape(Circle())
                         }
                     }
                     
@@ -271,7 +286,7 @@ struct OverviewView: View {
                                     value: NSDecimalNumber(decimal: goal.currentAmount).doubleValue,
                                     total: max(NSDecimalNumber(decimal: goal.targetAmount).doubleValue, 1)
                                 )
-                                .tint(.black)
+                                .tint(.darklilac)
                                 .scaleEffect(x: 1, y: 3, anchor: .center)
                                 .padding(.vertical, 4)
                             }
@@ -279,27 +294,48 @@ struct OverviewView: View {
                     }
                 }
                 .padding(20)
-                .background(Color.yellow)
+                .background(Color.color4)
                 .cornerRadius(16)
                 }
                 .padding(20)
             }
-            .scrollDisabled(showBigChart)
-            
-            if showBigChart {
-                CategoryChart(
-                    chartData: chartData,
-                    isExpanded: true,
-                    onDismiss: {
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.9)) {
-                            showBigChart = false
+            .padding(20)
+        }
+        
+        .sheet(isPresented: $showBigChart) {
+                    
+                    NavigationStack {
+                        VStack {
+                            if chartData.isEmpty {
+                                Text("No expense data")
+                                    .foregroundColor(.gray)
+                            } else {
+                                Charts.Chart(chartData) { expense in
+                                    SectorMark(
+                                        angle: .value("Spent", expense.amount),
+                                        innerRadius: .ratio(0.0),
+                                        angularInset: 0.5
+                                    )
+                                    .foregroundStyle(expense.color)
+                                    .annotation(position: .overlay) {
+                                        Text(expense.icon)
+                                            .font(.system(size: 45)) // Massive emojis!
+                                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 2)
+                                    }
+                                }
+                                .padding(40)
+                            }
                         }
-                    },
-                    onCategorySelected: { category in
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.9)) {
-                            showBigChart = false
+                        .navigationTitle("Expense Breakdown")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done") {
+                                    showBigChart = false
+                                }
+                                .bold()
+                            }
                         }
-                        selectedExpenseCategory = category
                     }
                 )
                 .zIndex(1)
@@ -309,6 +345,23 @@ struct OverviewView: View {
             CategoryTransaction(expenseCategory: category)
         }
     }
+    
+    private func saveNewBudget() {
+            guard let amount = Double(newBudgetAmount) else { return }
+            
+            let calendar = Calendar.current
+            let currentMonth = calendar.component(.month, from: .now)
+            let currentYear = calendar.component(.year, from: .now)
+            
+            if let existingBudget = budgets.first(where: { $0.month == currentMonth && $0.year == currentYear }) {
+                // Update existing budget
+                existingBudget.budgetAmount = amount
+            } else {
+                // Create a new budget (Notice the variables are in the right place now!)
+                let newBudget = MonthlyBudget(month: Int(amount), year: currentMonth, budgetAmount: Double(currentYear))
+                modelContext.insert(newBudget)
+            }
+        }
     
     private func summaryCard(icon: String, title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -332,7 +385,7 @@ struct OverviewView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
-        .background(Color.yellow)
+        .background(Color.color3)
         .cornerRadius(16)
     }
     

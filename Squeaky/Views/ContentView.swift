@@ -83,6 +83,7 @@ struct ContentView: View {
             PetSeedData
                 .petSeedIfNeeded(context:      modelContext)
             ChallengeSeedData.seedChallengeIfNeeded(context: modelContext)
+            SavingGoalSeedData.seedSavingGoalsIfNeeded(context: modelContext)
         }
         .toolbarBackground(.white, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
