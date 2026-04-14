@@ -11,9 +11,17 @@ import Charts
 
 struct OverviewView: View {
     
+    @Environment(\.modelContext) private var modelContext
+    
     @State private var isCensored: Bool = false
     
     @State private var showBigChart: Bool = false
+    
+    @State private var showBudgetModal: Bool = false
+    
+    @FocusState private var isInputFocused: Bool
+    
+    @State private var newBudgetAmount: String = ""
     
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
@@ -79,9 +87,9 @@ struct OverviewView: View {
         }
         
         let palette: [Color] = [
-            .yellow, .teal, .orange, .pink, .purple, .blue, .green, .red, .indigo, .mint
+            .kuningpastel, .tangarine, .outfit, .color6, .color7, .color2, .color4, .color3, .blue, .darklilac, .darkpurple, .color1
         ]
-        
+        //
         let sorted = grouped
             .map { key, value in
                 ExpenseCategory(
@@ -166,7 +174,10 @@ struct OverviewView: View {
                         
                         Spacer()
                         
-                        NavigationLink(destination: Text("Edit Budget Page")) {
+                        Button(action: {
+                            newBudgetAmount = ""
+                            showBudgetModal = true
+                        }) {
                             Image(systemName: "square.and.pencil")
                                 .font(.headline)
                                 .foregroundColor(.black)
@@ -181,7 +192,7 @@ struct OverviewView: View {
                         total: max(NSDecimalNumber(decimal: currentMonthBudget).doubleValue, 1)
                     )
                     .scaleEffect(x: 1, y: 3, anchor: .center)
-                    .tint(.orange)
+                    .tint(.lilac)
                     
                     Text("\(currency(currentMonthExpense)) / \(currency(currentMonthBudget))")
                         .font(.headline)
@@ -191,11 +202,12 @@ struct OverviewView: View {
                     NavigationLink(destination: PetView()) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.gray.opacity(0.1))
+                                .fill(Color.kuningpastel.opacity(0.1))
                             
                             VStack {
                                 Text("Squeaky level:")
                                     .font(.footnote)
+                                    .foregroundColor(.charcoal)
                                     .bold()
                                     .padding(.horizontal, 16)
                                     .padding(.top, 1)
@@ -217,7 +229,7 @@ struct OverviewView: View {
                                     Image("Pet lvl 1")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(height: 90)
+                                        .frame(height: 140)
                                         .offset(y: -20)
                                 }
                             }
@@ -254,7 +266,76 @@ struct OverviewView: View {
                                 }
                                 .padding(10)
                             }
+                            
                         }
+                        
+                        .sheet(isPresented: $showBudgetModal) {
+                            VStack(spacing: 24) {
+                                HStack(alignment: .top) {
+                                            Button(action: { showBudgetModal = false }) {
+                                                Image(systemName: "xmark")
+                                                    .font(.title3)
+                                                    .foregroundColor(.black)
+                                                    .padding(12)
+                                                    .background(Color.gray.opacity(0.15))
+                                                    .clipShape(Circle())
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            VStack(spacing: 4) {
+                                                Text("Monthly Budget")
+                                                    .font(.headline)
+                                                    .foregroundColor(.black)
+                                                    .bold()
+                                                Text("Enter your planned budget for this month!")
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.gray)
+                                                    .multilineTextAlignment(.center)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Button(action: {
+                                                saveNewBudget() // Calls our save function!
+                                                showBudgetModal = false // Closes the sheet
+                                            }) {
+                                                Image(systemName: "checkmark")
+                                                    .font(.title3)
+                                                    .foregroundColor(.black)
+                                                    .padding(12)
+                                                    .background(Color.gray.opacity(0.15))
+                                                    .clipShape(Circle())
+                                            }
+                                        }
+                                    
+                        
+                                        HStack {
+                                            Text("Rp.")
+                                                .foregroundColor(.gray)
+                                                .bold()
+                                            
+                                    TextField("", text: $newBudgetAmount)
+                                                .keyboardType(.numberPad) // Forces the Apple number keyboard
+                                        .focused($isInputFocused)
+                                            
+                                                .font(.title3)
+                                        }
+                                        .padding()
+                                        .background(Color.gray.opacity(0.15))
+                                        .cornerRadius(16)
+                                        
+                                        Spacer() // Pushes everything to the top
+                                    }
+                                    .padding(24)
+                                    .padding(.top, 10)
+                                    .presentationDetents([.height(320)]) // A custom height just for the keyboard!
+                                    .presentationDragIndicator(.visible)
+                                    .onAppear {
+                                        // This makes the keyboard slide up the second the sheet opens!
+                                        isInputFocused = true
+                                    }
+                                }
                         .frame(maxWidth: .infinity)
                         .aspectRatio(1, contentMode: .fit)
                     }
@@ -268,12 +349,11 @@ struct OverviewView: View {
                         
                         Spacer()
                         
-                        NavigationLink(destination: Text("Add Saving Goal Page")) {
+                        NavigationLink(destination: SavingGoalsView()) {
                             Image(systemName: "chevron.right")
                                 .font(.headline)
                                 .foregroundColor(.black)
                                 .padding(10)
-                                .background(Color.white)
                                 .clipShape(Circle())
                         }
                     }
@@ -294,7 +374,7 @@ struct OverviewView: View {
                                     value: NSDecimalNumber(decimal: goal.currentAmount).doubleValue,
                                     total: max(NSDecimalNumber(decimal: goal.targetAmount).doubleValue, 1)
                                 )
-                                .tint(.black)
+                                .tint(.darklilac)
                                 .scaleEffect(x: 1, y: 3, anchor: .center)
                                 .padding(.vertical, 4)
                             }
@@ -302,11 +382,12 @@ struct OverviewView: View {
                     }
                 }
                 .padding(20)
-                .background(Color.yellow)
+                .background(Color.color4)
                 .cornerRadius(16)
             }
             .padding(20)
         }
+        
         .sheet(isPresented: $showBigChart) {
                     
                     NavigationStack {
@@ -347,6 +428,23 @@ struct OverviewView: View {
                 }
     }
     
+    private func saveNewBudget() {
+            guard let amount = Double(newBudgetAmount) else { return }
+            
+            let calendar = Calendar.current
+            let currentMonth = calendar.component(.month, from: .now)
+            let currentYear = calendar.component(.year, from: .now)
+            
+            if let existingBudget = budgets.first(where: { $0.month == currentMonth && $0.year == currentYear }) {
+                // Update existing budget
+                existingBudget.budgetAmount = amount
+            } else {
+                // Create a new budget (Notice the variables are in the right place now!)
+                let newBudget = MonthlyBudget(month: Int(amount), year: currentMonth, budgetAmount: Double(currentYear))
+                modelContext.insert(newBudget)
+            }
+        }
+    
     private func summaryCard(icon: String, title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
@@ -369,7 +467,7 @@ struct OverviewView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
-        .background(Color.yellow)
+        .background(Color.color3)
         .cornerRadius(16)
     }
     
