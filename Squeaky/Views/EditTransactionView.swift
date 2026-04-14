@@ -55,39 +55,61 @@ struct EditTransactionView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // field judul transaksi
-                TextField("Title", text: $title)
-
-                // field amount
-                // pakai text biar gampang diolah dulu sebelum diubah jadi decimal
-                TextField("Amount", text: $amountText)
-                    .keyboardType(.numberPad)
-
-                // picker type income / expense
-                Picker("Type", selection: $selectedType) {
-                    Text("Income").tag(TransactionType.income)
-                    Text("Expense").tag(TransactionType.expense)
-                }
-                // kalau type berubah, category ikut di-reset biar cocok
-                .onChange(of: selectedType) { _, _ in
-                    selectedCategoryName = filteredCategories.first?.name ?? ""
-                }
-
-                // picker category sesuai type
-                Picker("Category", selection: $selectedCategoryName) {
-                    ForEach(filteredCategories, id: \.id) { category in
-                        Text(category.name).tag(category.name)
+                
+                    // field judul transaksi
+                    TextField("Title", text: $title)
+                    
+                    // field amount
+                    // pakai text biar gampang diolah dulu sebelum diubah jadi decimal
+                    TextField("Amount", text: $amountText)
+                        .keyboardType(.numberPad)
+                    
+                    // picker type income / expense
+                    Picker(selection: $selectedType) {
+                        Text("Income").tag(TransactionType.income)
+                        Text("Expense").tag(TransactionType.expense)
+                    } label: {
+                        Label {
+                            Text("Type")
+                        } icon: {
+                            Image(systemName: "arrow.up.arrow.down")
+                                .foregroundStyle(.purple)
+                        }
                     }
-                }
-
-                // pilih tanggal
-                DatePicker("Date", selection: $selectedDate, displayedComponents: [.date])
-
-                // note opsional
-                TextField("Note", text: $note)
+                    // kalau type berubah, category ikut di-reset biar cocok
+                    .onChange(of: selectedType) { _, _ in
+                        selectedCategoryName = filteredCategories.first?.name ?? ""
+                    }
+                    
+                    // picker category sesuai type
+                    Picker(selection: $selectedCategoryName) {
+                        ForEach(filteredCategories, id: \.id) { category in
+                            Text(category.name).tag(category.name)
+                        }
+                    } label: {
+                        Label {
+                            Text("Category")
+                        } icon: {
+                            Image (systemName: "tag")
+                                .foregroundStyle(.purple)
+                        }
+                    }
+                    
+                    // pilih tanggal
+                    DatePicker(selection: $selectedDate, displayedComponents: [.date]) {
+                        Label {
+                            Text("Date")
+                        } icon: {
+                            Image (systemName: "calendar")
+                                .foregroundStyle(.purple)
+                        }
+                    }
             }
+            .scrollContentBackground(.hidden)
+            
             .navigationTitle("Edit Transaction")
             .navigationBarTitleDisplayMode(.inline)
+            
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
@@ -100,6 +122,8 @@ struct EditTransactionView: View {
                         saveChanges()
                     }
                     .disabled(!canSave)
+                    .foregroundColor(.blue)
+                    .fontWeight(.semibold)
                 }
             }
             // kalau category kosong pas pertama kebuka, isi default dengan category pertama yang valid
@@ -109,6 +133,7 @@ struct EditTransactionView: View {
                 }
             }
         }
+        .background(Color.fadedyellow.ignoresSafeArea())
     }
 
     // validasi sederhana biar tombol save cuma aktif kalau input masuk akal
