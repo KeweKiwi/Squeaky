@@ -16,7 +16,6 @@ struct OverviewView: View {
     @State private var isCensored: Bool = false
     
     @State private var showBigChart: Bool = false
-    @State private var selectedExpenseCategory: ExpenseCategory?
     
     @State private var showBudgetModal: Bool = false
     
@@ -82,29 +81,24 @@ struct OverviewView: View {
         return min(spent / budget, 1.0)
     }
     
-    // MARK: -Pie Chart
     private var chartData: [ExpenseCategory] {
-        let grouped = Dictionary(grouping: currentMonthTransactions.filter { $0.type == .expense }) {
-            $0.category?.name ?? "Other"
-        }
-        
-        let palette: [Color] = [
-            .kuningpastel, .tangarine, .outfit, .color6, .color7, .color2, .color4, .color3, .blue, .darklilac, .darkpurple, .color1
-        ]
-        //
-        let sorted = grouped
-            .map { key, value in
-                ExpenseCategory(
-                    name: key,
-                    amount: value.reduce(0) { $0 + NSDecimalNumber(decimal: $1.amount).doubleValue },
-                    color: palette[abs(key.hashValue) % palette.count],
-                    icon: categoryEmoji(for: key)
-                )
+            let grouped = Dictionary(grouping: currentMonthTransactions.filter { $0.type == .expense }) {
+                $0.category?.name ?? "Other"
             }
-            .sorted { $0.amount > $1.amount }
-        
-        return sorted
-    }
+            
+            let sorted = grouped
+                .map { key, value in
+                    ExpenseCategory(
+                        name: key,
+                        amount: value.reduce(0) { $0 + NSDecimalNumber(decimal: $1.amount).doubleValue },
+                        color: categoryColor(for: key), // <--- We call your new function here!
+                        icon: categoryEmoji(for: key)
+                    )
+                }
+                .sorted { $0.amount > $1.amount }
+            
+            return sorted
+        }
     
     private var sortedGoals: [SavingGoal] {
         savingGoals.sorted {
@@ -113,9 +107,8 @@ struct OverviewView: View {
     }
     
     var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(spacing: 20) {
+        ScrollView {
+            VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 20) {
                     HStack {
                         Text("Welcome back!")
@@ -195,7 +188,7 @@ struct OverviewView: View {
                         total: max(NSDecimalNumber(decimal: currentMonthBudget).doubleValue, 1)
                     )
                     .scaleEffect(x: 1, y: 3, anchor: .center)
-                    .tint(.lilac)
+                    .tint(.darklilac)
                     
                     Text("\(currency(currentMonthExpense)) / \(currency(currentMonthBudget))")
                         .font(.headline)
@@ -241,16 +234,107 @@ struct OverviewView: View {
                     .frame(maxWidth: .infinity)
                     .aspectRatio(1, contentMode: .fit)
                     
-                    // MARK: -CHART EXPENSE DATA
-                    CategoryChart(
-                        chartData: chartData,
-                        onExpand: {
-                            withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
-                                showBigChart = true
+                    Button(action: {
+                        showBigChart = true
+                    }) {
+                        
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.3), radius: 5, x: 0, y: 3)
+                            
+                            if chartData.isEmpty {
+                                Text("No expense data")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            } else {
+                                Charts.Chart(chartData) { expense in
+                                    SectorMark(
+                                        angle: .value("Spent", expense.amount),
+                                        innerRadius: .ratio(0.0),
+                                        angularInset: 0.5
+                                    )
+                                    .foregroundStyle(expense.color)
+                                    .annotation(position: .overlay) {
+                                        Text(expense.icon)
+                                            .font(.title2)
+                                    }
+                                }
+                                .padding(10)
                             }
                             
                         }
-                    )
+                        
+                        .sheet(isPresented: $showBudgetModal) {
+                            VStack(spacing: 24) {
+                                HStack(alignment: .top) {
+                                            Button(action: { showBudgetModal = false }) {
+                                                Image(systemName: "xmark")
+                                                    .font(.title3)
+                                                    .foregroundColor(.black)
+                                                    .padding(12)
+                                                    .background(Color.gray.opacity(0.15))
+                                                    .clipShape(Circle())
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            VStack(spacing: 4) {
+                                                Text("Monthly Budget")
+                                                    .foregroundColor(.black)
+                                                    .font(.headline)
+                                                    .bold()
+                                                Text("enter your planned nominal for\nthis month")
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.gray)
+                                                    .multilineTextAlignment(.center)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Button(action: {
+                                                saveNewBudget() // Calls our save function!
+                                                showBudgetModal = false // Closes the sheet
+                                            }) {
+                                                Image(systemName: "checkmark")
+                                                    .font(.title3)
+                                                    .foregroundColor(.black)
+                                                    .padding(12)
+                                                    .background(Color.gray.opacity(0.15))
+                                                    .clipShape(Circle())
+                                            }
+                                        }
+                                    
+                        
+                                        HStack {
+                                            Text("Rp.")
+                                                .foregroundColor(.gray)
+                                                .bold()
+                                            
+                                    TextField("", text: $newBudgetAmount)
+                                                .keyboardType(.numberPad) // Forces the Apple number keyboard
+                                        .focused($isInputFocused)
+                                            
+                                                .font(.title3)
+                                        }
+                                        .padding()
+                                        .background(Color.gray.opacity(0.15))
+                                        .cornerRadius(16)
+                                        
+                                        Spacer() // Pushes everything to the top
+                                    }
+                                    .padding(24)
+                                    .padding(.top, 10)
+                                    .presentationDetents([.height(320)]) // A custom height just for the keyboard!
+                                    .presentationDragIndicator(.visible)
+                                    .onAppear {
+                                        // This makes the keyboard slide up the second the sheet opens!
+                                        isInputFocused = true
+                                    }
+                                }
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(1, contentMode: .fit)
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 10) {
@@ -296,8 +380,6 @@ struct OverviewView: View {
                 .padding(20)
                 .background(Color.color4)
                 .cornerRadius(16)
-                }
-                .padding(20)
             }
             .padding(20)
         }
@@ -337,13 +419,9 @@ struct OverviewView: View {
                             }
                         }
                     }
-                )
-                .zIndex(1)
-            }
-        }
-        .navigationDestination(item: $selectedExpenseCategory) { category in
-            CategoryTransaction(expenseCategory: category)
-        }
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                }
     }
     
     private func saveNewBudget() {
@@ -385,7 +463,7 @@ struct OverviewView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
-        .background(Color.color3)
+        .background(Color.lemon)
         .cornerRadius(16)
     }
     
@@ -425,22 +503,32 @@ struct OverviewView: View {
         default: return "🧾"
         }
     }
+    
+    private func categoryColor(for name: String) -> Color {
+            switch name.lowercased() {
+            case "food": return .wheel4
+            case "entertainment": return .wheel2
+            case "social": return .wheel1
+            case "transport": return .wheel3
+            case "gift": return .wheel5
+            case "beauty": return .wheel6
+            case "medical": return .wheel7
+            case "debt": return .wheel8
+            case "daily": return .wheel9
+            case "salary": return .wheel10
+            case "allowance": return .wheel11
+            case "bonus": return .wheel12
+            default: return .gray
+            }
+        }
 }
 
-struct ExpenseCategory: Identifiable, Equatable, Hashable {
-    var id: String { name }
+struct ExpenseCategory: Identifiable {
+    let id = UUID()
     let name: String
     let amount: Double
     let color: Color
     let icon: String
-
-    static func == (lhs: ExpenseCategory, rhs: ExpenseCategory) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
 }
 
 #Preview {

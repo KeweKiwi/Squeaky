@@ -21,7 +21,7 @@ struct GoalProgressView: View {
             // MARK: - Header Section
             ZStack {
                 Circle()
-                    .fill(Color(red: 0.95, green: 0.88, blue: 1.0))
+                    .fill(Color.color4)
                     .frame(width: 590, height: 590)
                     .offset(y: -200)
                     .ignoresSafeArea()
@@ -63,7 +63,7 @@ struct GoalProgressView: View {
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(width: 220, height: 54)
-                        .background(Color(red: 0.65, green: 0.52, blue: 0.78))
+                        .background(Color.darkpurple)
                         .clipShape(Capsule())
                         .shadow(
                             color: Color.black.opacity(0.15),

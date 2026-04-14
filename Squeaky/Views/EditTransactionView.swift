@@ -73,7 +73,7 @@ struct EditTransactionView: View {
                             Text("Type")
                         } icon: {
                             Image(systemName: "arrow.up.arrow.down")
-                                .foregroundStyle(.purple)
+                                .foregroundStyle(.darklilac)
                         }
                     }
                     // kalau type berubah, category ikut di-reset biar cocok
@@ -91,7 +91,7 @@ struct EditTransactionView: View {
                             Text("Category")
                         } icon: {
                             Image (systemName: "tag")
-                                .foregroundStyle(.purple)
+                                .foregroundStyle(.darklilac)
                         }
                     }
                     
@@ -101,7 +101,7 @@ struct EditTransactionView: View {
                             Text("Date")
                         } icon: {
                             Image (systemName: "calendar")
-                                .foregroundStyle(.purple)
+                                .foregroundStyle(.darklilac)
                         }
                     }
             }
@@ -133,7 +133,7 @@ struct EditTransactionView: View {
                 }
             }
         }
-        .background(Color.fadedyellow.ignoresSafeArea())
+        .background(Color.lemon.opacity(0.25).ignoresSafeArea())
     }
 
     // validasi sederhana biar tombol save cuma aktif kalau input masuk akal

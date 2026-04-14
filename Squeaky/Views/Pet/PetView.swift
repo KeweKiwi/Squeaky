@@ -97,10 +97,10 @@ struct PetView: View {
         ZStack(alignment: .top) {
 
             Circle()
-                .fill(Color(red: 248 / 255, green: 206 / 255, blue: 23 / 255))
+                .fill(Color.lemon)
                 .frame(width: 590, height: 590)
                 .offset(y: -200)
-                .opacity(0.3)
+                .opacity(0.5)
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {

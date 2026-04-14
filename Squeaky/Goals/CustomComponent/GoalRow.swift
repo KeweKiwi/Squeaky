@@ -19,7 +19,7 @@ struct GoalRow: View {
 
                     Text(SavingGoalService.progressSummary(for: goal))
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.black.opacity(0.8))
                 }
 
                 Spacer()
@@ -35,7 +35,7 @@ struct GoalRow: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.purple.opacity(0.2))
+        .background(Color.lemon.opacity(0.4))
         .cornerRadius(16)
     }
 }

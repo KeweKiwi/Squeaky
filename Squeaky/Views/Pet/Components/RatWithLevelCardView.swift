@@ -12,21 +12,24 @@ struct RatWithLevelCardView: View {
     @Query private var pets: [Pet]
     @Environment(\.modelContext) private var modelContext
     
+    // -> 1. ADD THE BREATHING SWITCH HERE <-
+    @State private var isBreathing: Bool = false
+    
     var pet: Pet? {
-            pets.first
-        }
+        pets.first
+    }
     
     var level: Int {
-           pet?.level ?? 1
-       }
+        pet?.level ?? 1
+    }
 
-       var currentXP: Int {
-           pet?.currentXP ?? 0
-       }
+    var currentXP: Int {
+        pet?.currentXP ?? 0
+    }
 
-       var maxXP: Int {
-           pet?.maxXP ?? 100
-       }
+    var maxXP: Int {
+        pet?.maxXP ?? 100
+    }
 
     // Progress within the current level (0.0 to 1.0)
     var progress: Double {
@@ -53,8 +56,26 @@ struct RatWithLevelCardView: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            Image(ratImageName).resizable().scaledToFit()
+            
+            //ANIMASI DISINI
+            Image(ratImageName)
+                .resizable()
+                .scaledToFit()
                 .frame(height: 150)
+                .scaleEffect(
+                    x: isBreathing ? 1.02 : 1.0,
+                    y: isBreathing ? 1.04 : 1.0,
+                    anchor: .bottom //biar diem di tanah
+                )
+                .offset(y: isBreathing ? -2 : 0)
+                .animation(
+                    .easeInOut(duration: 1.5)
+                    .repeatForever(autoreverses: true),
+                    value: isBreathing
+                )
+                .onAppear {
+                    isBreathing = true
+                }
 
             HStack(spacing: 0) {
                 // Star badge with level number
